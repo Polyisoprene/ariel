@@ -8,8 +8,8 @@ import nonebot
 env = {
     'DRIVER':'~fastapi',
     'SUPERUSERS': [],
-
-
+    'LOG_LEVEL':'INFO',
+    'HOST':'127.0.0.1',
 }
 
 
