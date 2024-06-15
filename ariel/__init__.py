@@ -1,5 +1,4 @@
 import click
-import json
 from os import path, getcwd, mkdir
 import dotenv
 import nonebot
