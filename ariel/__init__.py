@@ -7,8 +7,7 @@ import nonebot
 env = {
     'DRIVER':'~fastapi',
     'SUPERUSERS': [],
-
-
+    'HOST':"127.0.0.1",
 }
 
 
