@@ -59,7 +59,7 @@ JNrRuoEUXpabUzGB8QIDAQAB
         self.cookie = new_data[0]
         async with DataManager() as m:
             await m.update_cookie((pickle.dumps(self.cookie), new_data[1],self.refresh_token))
-        self.refresh_token = new_data[0]
+        self.refresh_token = new_data[1]
      
     async def __get_correspond_path(self):
         params = {"csrf":self.cookie["bili_jct"]}

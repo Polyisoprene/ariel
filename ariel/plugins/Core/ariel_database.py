@@ -92,3 +92,7 @@ class DataManager:
     async def insert_cookie(self,data:set):
         sql = "INSERT INTO Cookie (cookie,refresh_token) VALUES (?, ?);"
         await self.__cursor.execute(sql,data)
+    
+    async def update_cookie(self,data:set):
+        sql = "UPDATE Cookie SET cookie = ? , refresh_token=?  WHERE refresh_token=?"
+        await self.__cursor.execute(sql,data)
