@@ -9,7 +9,7 @@ class DataManager:
         self.dbexists = True
 
     async def __aenter__(self):
-        db_path = path.join(getcwd(),"data.sqlit")
+        db_path = path.join(getcwd(),"data.sqlite")
         if not path.exists(db_path):
             self.dbexists=False
         self.__conn = await aiosqlite.connect(db_path)
