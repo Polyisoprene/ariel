@@ -21,6 +21,7 @@ class DataManager:
             await self.__creat_subChennal_table()
             await self.__creat_botStatus_table()
             await self.__creat_cookie_table()
+            await self.__creat_dynamic_table()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -38,7 +39,7 @@ class DataManager:
             CREATE TABLE IF NOT EXISTS subTarget (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, 
                 nickname TEXT NOT NULL,
-                uid TEXT NOT NULL,
+                uid TEXT NOT NULL UNIQUE,
                 live_status INTEGER NOT NULL DEFAULT 1 CHECK(live_status IN (0, 1))
             );
             """
@@ -83,6 +84,16 @@ class DataManager:
             """
         await self.__cursor.execute(sql)
 
+    async def __creat_dynamic_table(self):
+        sql ="""
+            CREATE TABLE IF NOT EXISTS Dynamic (
+                dyn_id TEXT NOT NULL PRIMARY KEY,
+                uname  TEXT NOT NULL,
+                dyn_content  BLOB NOT NULL
+            );
+            """
+        await self.__cursor.execute(sql)
+
 # cookie process
     async def select_cookie(self):
         sql = "SELECT cookie, refresh_token FROM Cookie"
@@ -96,3 +107,76 @@ class DataManager:
     async def update_cookie(self,data:set):
         sql = "UPDATE Cookie SET cookie = ? , refresh_token=?  WHERE refresh_token=?"
         await self.__cursor.execute(sql,data)
+
+#dynamic process
+    async def select_dyn_content(self,dyn_id: str):
+        sql = "SELECT dyn_content FROM Dynamic WHERE dyn_id=?"
+        await self.__cursor.execute(sql,(dyn_id,))
+        return await self.__cursor.fetchone()
+    
+    async def insert_dyn_data(self,dyn_data:tuple):
+        sql = "INSERT INTO Dynamic (dyn_id,uname,dyn_content) VALUES (?, ?,?);"
+        await self.__cursor.execute(sql,dyn_data)
+
+# subTarget process
+    async def insert_sub_target(self,sub_data:tuple):
+        """增加订阅记录
+
+        :param sub_data: (uid,nickname,live_status)
+        :type sub_data: tuple
+        """
+        sql = "INSERT INTO subTarget (uid,nickname,live_status) VALUES (?, ?,?);"
+        await self.__cursor.execute(sql,sub_data)
+    
+    async def select_sub_target(self,uid:str):
+        sql = "SELECT uid FROM subTarget WHERE uid=?"
+        await self.__cursor.execute(sql,(uid,))
+        return await self.__cursor.fetchone()
+    
+    async def update_sub_target(self,data:tuple):
+        """修改订阅名单
+
+        :param data: (nickname,live_status,uid)
+        :type data: tuple
+        """
+        sql = "UPDATE subTarget SET  nickname=?, live_status=?  WHERE uid=?"
+        await self.__cursor.execute(sql,data)
+
+#subChennal process
+
+    async def insert_sub_chennal(self,data:tuple):
+        """增加订阅群组及机器人记录
+
+        :param data: (uid,groupId,bot)
+        :type data: tuple
+        """
+        sql = "INSERT INTO subChennal (uid,groupId,bot) VALUES (?, ?,?);"
+        await self.__cursor.execute(sql,data)
+    
+    async def update_sub_chennal(self,data:tuple):
+        """修改订阅群组记录
+
+        :param data: (live_active,dyn_active,uid,groupId,bot)
+        :type data: tuple
+        """
+        sql = "UPDATE subChennal SET  live_active=?, dyn_active=?  WHERE uid=? AND groupId=? AND bot=?"
+        await self.__cursor.execute(sql,data)
+# find dyn 
+    async def select_dynamic_push(self,data:tuple):
+        sql = """
+            SELECT DISTINCT t2.groupId, t2.bot
+            FROM 
+                subTarget t1
+                INNER JOIN subChennal t2 ON t1.uid = t2.uid
+                INNER JOIN botStatus t3 ON t2.groupId = t3.groupId AND t2.bot = t3.bot
+            WHERE 
+                t1.uid = ? 
+                AND t3.push_active = 1 
+                AND t3.bot_active = 1;
+            """
+        
+        
+        
+
+
+
