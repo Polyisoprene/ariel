@@ -4,7 +4,7 @@ import urllib.parse
 from hashlib import md5
 from nonebot import logger
 from functools import reduce
-from typing import Optional,List
+from typing import Optional,List,Union
 from ariel_cookie import CookieManager
 from dynamicadaptor.Message import RenderMessage
 from dynamicadaptor.DynamicConversion import formate_message
@@ -147,12 +147,39 @@ class Live(CookieManager):
     def __init__(self):
         super().__init__()
     
-    async def get_live_status_from_follow_list(self):
+    async def get_live_users_from_follow_list(self):
         await self.get_cookie()
         if self.cookie is None:
             return None
-        url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal?up_list_more=1&web_location=333.1365"
+        self.headers.update({
+            "referer":"https://t.bilibili.com/?spm_id_from=333.1007.0.0",
+            "origin":"https://t.bilibili.com"
+        })
+        params = {
+            "up_list_more":1,
+            "web_location":333.1365
+        }
+        url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal"
+        try:
+            response = httpx.get(headers=self.headers,url=url,cookies=self.cookie,params=params)
+            response.raise_for_status()
+            return response.json()["data"]["live_users"]
+        except Exception as e:
+            logger.error(e)
+            return None
 
+    async def get_room_info_by_uids(self,uids:List[Union[int, str]]):
+        url = "https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids"
+        data = {
+            "uids":uids
+        }
+        try:
+            response = httpx.post(url,headers=self.headers,json=data)
+            response.raise_for_status()
+            return response.json()["data"]["live_users"]["items"]
+        except Exception as e:
+            logger.error(e)
+            return None
 
 class Sign:
     def __init__(self):
