@@ -41,9 +41,8 @@ class Login:
         }
         try:
             response = httpx.get(url,headers=self.headers,params=params)
-            if response.status_code != 200:
-                return response.json()["data"]
-            return None
+            response.raise_for_status()
+            return response.json()["data"]
         except Exception as e:
             logger.error(e)
             return None
@@ -52,13 +51,13 @@ class Login:
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
         try:
             response = httpx.get(url,headers=self.headers)
-            if response.status_code !=200:
-                return None
+            response.raise_for_status()
             self.qrcode_key = response.json()["data"]["qrcode_key"]
             return response.json()["data"]["url"]
         except Exception as e:
             logger.error(e)
             return None
+
 
 class Dynamic(CookieManager):
     def __init__(self):
@@ -180,6 +179,67 @@ class Live(CookieManager):
         except Exception as e:
             logger.error(e)
             return None
+
+class UserInfo(CookieManager):
+    def __init__(self):
+        super().__init__()
+    
+    async def get_user_info_by_uid(self,uid):
+        """通过uid获取信息
+
+        Args:
+            uid (int): 用户uid
+        """
+        
+        await self.get_cookie()
+        if self.cookie is None:
+            return "未登录"
+        url = "https://api.bilibili.com/x/web-interface/card"
+        params = {
+            "mid":uid,
+            "photo":"true",
+            "web_location":"0.0"
+        }
+        self.headers.update({
+            "host":"api.bilibili.com",
+            "origin":"https://t.bilibili.com",
+            "referer":"https://t.bilibili.com/"
+        })
+        try:
+            response = httpx.get(url,headers=self.headers,cookies=self.cookie,params=params)
+            response.raise_for_status()
+            if response.json()["code"] !=0:
+                return "未找到相关UP信息"
+            else:
+                return response.json()["data"]
+        except Exception as e:
+            return str(e)
+
+    async def change_follow_status(self, uid, act):
+        await self.get_cookie()
+        if self.cookie is None:
+            return None
+        url = 'https://api.bilibili.com/x/relation/modify?statistics={"appId":100,"platform":5}&x-bili-device-req-json={"platform":"web","device":"pc","spmid":"0.0"}'
+        data = {
+            "fid":f"{uid}",
+            "act":f"{act}",
+            "re_src":"11",
+            "gaia_source":"web_main",
+            "spmid":"0.0",
+            "extend_content":'{"entity":"user","entity_id":477332594}',
+            "is_from_frontend_component":"true",
+            "csrf":self.cookie["bili_jct"]
+        }
+        try:
+            response = httpx.post(url,headers=self.headers,cookies=self.cookie,data=data)
+            response.raise_for_status()
+            if response.json()["code"]==0:
+                return True
+            return None
+        except Exception as e:
+            logger.error(e)
+            return None
+    
 
 class Sign:
     def __init__(self):
