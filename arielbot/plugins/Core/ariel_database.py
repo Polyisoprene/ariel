@@ -224,7 +224,7 @@ class DataManager:
         """select sun chennal data
 
         Args:
-            data (tuple): (uid, bot, groupId)
+            data (tuple): (uid, groupId, bot)
 
         Returns:
             Optional[set]: 

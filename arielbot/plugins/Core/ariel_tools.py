@@ -64,7 +64,7 @@ class PublicSubTools:
     
     async def check_uid_in_group(self,bot:int,groupId:int):
         async with DataManager() as m:
-            return await m.select_sub_chennal((self.uid,bot,groupId))
+            return await m.select_sub_chennal((self.uid,groupId,bot))
     
     async def check_uid_has_sub(self):
         async with DataManager() as m:
