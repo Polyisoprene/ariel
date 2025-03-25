@@ -26,13 +26,13 @@ async def _():
 
 
 # 基于装饰器的方式
-@scheduler.scheduled_job("cron", second="*/8", id="dyn_pusher")
+@scheduler.scheduled_job("cron", second="*/8", id="dyn_pusher",max_instances=1)
 async def _():
     pusher = DynPusher()
     await pusher.push_dynamic()
 
 
-@scheduler.scheduled_job("cron", second="*/10", id="live_pusher")
+@scheduler.scheduled_job("cron", second="*/10", id="live_pusher",max_instances=1)
 async def _():
     pusher = LivePusher()
     await pusher.push_live()
