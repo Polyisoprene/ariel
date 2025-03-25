@@ -37,7 +37,7 @@ class DynPusher(PublicPusher):
                 if not all_push_group:
                     logger.info("没有需要推送的群，跳过该动态")
                     continue
-                img = await DynRender().run(dynamic)
+                img = await DynRender(font_family="Noto Sans CJK SC").run(dynamic)
                 img = skia.Image.fromarray(img, colorType=skia.ColorType.kRGBA_8888_ColorType)
                 img_buffer = BytesIO()
                 img.save(img_buffer)
@@ -79,7 +79,8 @@ class LivePusher(PublicPusher):
                 all_push_target = await m.select_live_push(v["uid"])
             if not all_push_target:
                 continue
-            message = MessageSegment.text(f"【{v["uname"]}】开播啦!!!\n\n标题：{v["title"]}\n\n")+MessageSegment.text(f"传送门：https://live.bilibili.com{v["room_id"]}\n")+MessageSegment.image(v["cover_from_user"])
+            logger.info(f"{v["live_status"]},{all_live_stauts[k]}")
+            message = MessageSegment.text(f"【{v["uname"]}】开播啦!!!\n\n标题：{v["title"]}\n\n")+MessageSegment.text(f"传送门：https://live.bilibili.com/{v["room_id"]}\n")+MessageSegment.image(v["cover_from_user"])
             tasks.append({"target":all_push_target,"message":message})
         if tasks:
             await asyncio.gather(*[self.assign_tasks(i) for i in tasks])
