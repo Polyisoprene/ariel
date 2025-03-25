@@ -41,7 +41,7 @@ class DynPusher(PublicPusher):
                 img = skia.Image.fromarray(img, colorType=skia.ColorType.kRGBA_8888_ColorType)
                 img_buffer = BytesIO()
                 img.save(img_buffer)
-                message = MessageSegment.text(f"{dynamic.header.name}发布了新动态:\n\n")+MessageSegment.text(f"传送门——>https://t.bilibili.com{dynamic.message_id}")+MessageSegment.image(img_buffer)
+                message = MessageSegment.text(f"{dynamic.header.name}发布了新动态:\n\n")+MessageSegment.text(f"传送门→https://t.bilibili.com{dynamic.message_id}")+MessageSegment.image(img_buffer)
                 task_list.append({"target":all_push_group,"message":message})
         if task_list:
             await asyncio.gather(*[self.assign_tasks(i) for i in task_list])
