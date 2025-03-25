@@ -97,9 +97,27 @@ class DataManager:
 
 #bot status process
     async def select_bot_status(self,data:set) -> Optional[set]:
+        """select bot status
+
+        Args:
+            data (set): (bot,groupId)
+
+        Returns:
+            Optional[set]: (push_active,bot_active)
+        """
         sql = "SELECT push_active,bot_active FROM botStatus WHERE bot=? AND groupId=?"
         await self.__cursor.execute(sql,data)
         return await self.__cursor.fetchone()
+    
+    async def select_all_bot(self) -> Optional[list]:
+        """select all bot
+
+        :return: [bot]
+        :rtype: Optional[list]
+        """
+        sql = "SELECT DISTINCT  bot FROM botStatus"
+        await self.__cursor.execute(sql)
+        return await self.__cursor.fetchall()
     
     async def insert_bot_status(self,data:set):
         """insert bot status
@@ -110,16 +128,24 @@ class DataManager:
         sql = "INSERT INTO botStatus (bot,groupId,push_active,bot_active) VALUES (?, ?,?,?);"
         await self.__cursor.execute(sql,data)
         
-    async def update_bot_status(self,data:set) -> None:
-        """update bot status
+    async def update_bot_push_status(self,data:set) -> None:
+        """update bot push status
 
         Args:
-            data (set): (push_active,bot_active,bot,groupId)
+            data (set): (push_active,bot,groupId)
         """
-        sql = "UPDATE botStatus SET push_active = ? , bot_active=?  WHERE bot=? AND groupId=?"
+        sql = "UPDATE botStatus SET push_active = ?  WHERE bot=? AND groupId=?"
         await self.__cursor.execute(sql,data)
         
-    
+    async def updata_bot_active_status(self,data:set):
+        """update bot active status
+
+        Args:
+            data (set): (bot_active, bot)
+        """
+        sql = "UPDATE botStatus SET bot_active = ? WHERE bot=?"
+        await self.__cursor.execute(sql,data)
+        
 
 # cookie process
     async def select_cookie(self):
@@ -142,6 +168,11 @@ class DataManager:
         return await self.__cursor.fetchone()
     
     async def insert_dyn_data(self,dyn_data:tuple):
+        """insert dyn data
+
+        Args:
+            dyn_data (tuple): (dyn_id,uname,dyn_content)
+        """
         sql = "INSERT INTO Dynamic (dyn_id,uname,dyn_content) VALUES (?, ?,?);"
         await self.__cursor.execute(sql,dyn_data)
 
@@ -198,12 +229,20 @@ class DataManager:
         Returns:
             Optional[set]: 
         """
-        sql = "SELECT live_active, dyn_active WHERE uid=? AND groupId=? AND bot=?"
+        sql = "SELECT  live_active, dyn_active FROM subChennal  WHERE uid=? AND groupId=? AND bot=?"
         await self.__cursor.execute(sql,data)
         return await self.__cursor.fetchone()
     
 # find dyn push list
-    async def select_dynamic_push(self,uid:str):
+    async def select_dynamic_push(self,uid:str) -> Optional[list]:
+        """select dynamic push group and bot
+
+        Args:
+            uid (str): uid
+
+        Returns:
+            Optional[list]: [(groupId,bot)]
+        """
         sql = """
             SELECT DISTINCT t2.groupId, t2.bot
             FROM 
@@ -217,10 +256,81 @@ class DataManager:
                 AND t3.bot_active = 1;
             """
         
-        await self.__cursor.execute(sql,(uid,))
+        await self.__cursor.execute(sql,(int(uid),))
         return await self.__cursor.fetchall()
-    
 
+#find live check uid
+    async def select_live_check_uid(self) -> Optional[list]:
+            """select dynamic push group and bot
+
+            Args:
+                uid (str): uid
+
+            Returns:
+                Optional[list]: [(groupId,bot)]
+            """
+            sql = """
+                SELECT DISTINCT t1.uid,t1.live_status
+                FROM 
+                    subTarget t1
+                    INNER JOIN subChennal t2 ON t1.uid = t2.uid
+                    INNER JOIN botStatus t3 ON t2.groupId = t3.groupId AND t2.bot = t3.bot
+                WHERE 
+                    t3.push_active = 1
+                    AND t2.live_active = 1
+                    AND t3.bot_active = 1;
+                """
+            
+            await self.__cursor.execute(sql)
+            return await self.__cursor.fetchall()
+#find live push list
+    async def select_live_push(self,uid:str) -> Optional[list]:
+            """select live push group and bot
+
+            Args:
+                uid (str): uid
+
+            Returns:
+                Optional[list]: [(groupId,bot)]
+            """
+            sql = """
+                SELECT DISTINCT t2.groupId, t2.bot
+                FROM 
+                    subTarget t1
+                    INNER JOIN subChennal t2 ON t1.uid = t2.uid
+                    INNER JOIN botStatus t3 ON t2.groupId = t3.groupId AND t2.bot = t3.bot
+                WHERE 
+                    t1.uid = ? 
+                    AND t3.push_active = 1
+                    AND t2.live_active = 1
+                    AND t3.bot_active = 1;
+                """
+            
+            await self.__cursor.execute(sql,(uid,))
+            return await self.__cursor.fetchall()
+
+# get sub list
+    async def select_sub_list(self,data:set) -> Optional[list]:
+        """select sub list data
+
+        Args:
+            data (tuple): (bot, groupId)
+
+        Returns:
+            Optional[set]: (nickname,live_active,dyn_active)
+        """
+
+        sql = """
+            SELECT DISTINCT t1.uid, t1.nickname,t2.live_active,t2.dyn_active
+            FROM
+                subTarget t1
+                INNER JOIN subChennal t2 ON t1.uid = t2.uid
+            WHERE
+                t2.bot=?
+                AND t2.groupId=?        
+            """
+        await self.__cursor.execute(sql,data)
+        return await self.__cursor.fetchall()
         
         
 

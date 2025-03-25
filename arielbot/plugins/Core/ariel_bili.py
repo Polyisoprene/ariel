@@ -5,7 +5,7 @@ from hashlib import md5
 from nonebot import logger
 from functools import reduce
 from typing import Optional,List,Union
-from ariel_cookie import CookieManager
+from arielbot.plugins.Core.ariel_cookie import CookieManager
 from dynamicadaptor.Message import RenderMessage
 from dynamicadaptor.DynamicConversion import formate_message
 
@@ -175,7 +175,7 @@ class Live(CookieManager):
         try:
             response = httpx.post(url,headers=self.headers,json=data)
             response.raise_for_status()
-            return response.json()["data"]["live_users"]["items"]
+            return response.json()["data"]
         except Exception as e:
             logger.error(e)
             return None

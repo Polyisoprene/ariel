@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "ariel"
-version = "0.1.0"
+name = "arielBot"
+version = "0.3.8"
 description = ""
 authors = ["Polyisoprene <lzxder@outlook.com>"]
 license = "MIT"
@@ -22,7 +22,7 @@ nonebot-plugin-apscheduler = "^0.5.0"
 [tool.poetry.group.dev.dependencies]
 
 [tool.poetry.scripts]
-ariel = "ariel.__init__:main"
+ariel = "arielbot.__init__:main"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,4 +1,4 @@
-from ariel_database import DataManager
+from arielbot.plugins.Core.ariel_database import DataManager
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 

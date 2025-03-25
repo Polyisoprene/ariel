@@ -9,7 +9,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from http.cookies import SimpleCookie
 from datetime import datetime,timezone
-from ariel_database import DataManager
+from arielbot.plugins.Core.ariel_database import DataManager
 
 class CookieManager:
     def __init__(self):
