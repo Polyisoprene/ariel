@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arielBot"
-version = "0.4.5"
+version = "0.4.7"
 description = ""
 authors = ["Polyisoprene <lzxder@outlook.com>"]
 license = "MIT"

@@ -140,7 +140,16 @@ class Dynamic(CookieManager):
         except Exception as e:
             logger.error(e)
             return None
-        
+    
+    async def get_short_link_location(self,short_link:str):
+        try:
+            response = httpx.get(url=short_link,headers=self.headers)
+            return response.headers.get("Location",None)
+        except Exception as e:
+            logger.error(f"get short link location error:{e}")
+            return None
+
+
 
 class Live(CookieManager):
     def __init__(self):
