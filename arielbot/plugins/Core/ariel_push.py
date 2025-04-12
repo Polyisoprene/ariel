@@ -93,7 +93,31 @@ class DynPusher(PublicPusher):
         img_buffer = BytesIO()
         img.save(img_buffer)
         return MessageSegment.image(img_buffer)        
+
+    @staticmethod
+    async def search_dyn_img_by_id(message_id):
+        async with DataManager() as m:
+            dynamic = await m.select_dyn_content(message_id)
+        if not dynamic:
+            obj = Dynamic()
+            dynamic = await obj.get_dynamic_from_id(message_id)
+            if dynamic is None:
+                return
+            else:
+                async with DataManager() as m:
+                    await m.insert_dyn_data((message_id,dynamic.header.name,pickle.dumps(dynamic)))
+        else:
+            dynamic = pickle.loads(dynamic[0])
+        if dynamic.major.type == "MAJOR_TYPE_OPUS":
+            message = None
+            for pic in dynamic.major.opus.pics:
+                message += MessageSegment.image(pic.url)
+            return message
+        else:
+            return "此动态没有图片"
         
+        
+
                 
                 
         

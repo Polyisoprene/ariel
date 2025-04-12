@@ -197,7 +197,7 @@ class SubListTools:
             )
         for i in range(250,1000,250):
             canvas.drawLine(i, 0, i, img_height, paint)
-        for i in range(60,540,60):
+        for i in range(60,img_height,60):
             rect = skia.Rect.MakeXYWH(0, 0, 1000, i)
             canvas.drawRect(rect, paint)
         typeface = skia.FontMgr().matchFamilyStyleCharacter("Noto Sans CJK SC",skia.FontStyle().Normal(),["zh", "en"],ord(sub_data[0][1][0]),)

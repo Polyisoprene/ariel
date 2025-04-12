@@ -35,6 +35,20 @@ bot_help = on_command("help")
 b23 = on_regex(r"(https?://b23\.tv/[\w-]+)(?=[^\w-]|$)", flags=re.IGNORECASE)
 s_dyn = on_command("sd")
 
+get_img = on_command("img")
+
+@get_img.handle()
+async def _(event:GroupMessageEvent,args: Message = CommandArg()):
+    if args.extract_plain_text() and args.extract_plain_text().isdigit():
+        message = await DynPusher.search_dyn_img_by_id(args.extract_plain_text())
+        if message is None:
+            await get_img.finish()
+        else:
+            await get_img.finish(message)
+    else:
+        await get_img.finish()
+
+
 @s_dyn.handle()
 async def _(event:GroupMessageEvent,args: Message = CommandArg()):
     if args.extract_plain_text() and args.extract_plain_text().isdigit():
