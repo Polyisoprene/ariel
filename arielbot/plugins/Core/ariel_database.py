@@ -161,6 +161,10 @@ class DataManager:
         sql = "UPDATE Cookie SET cookie = ? , refresh_token=?  WHERE refresh_token=?"
         await self.__cursor.execute(sql,data)
 
+    async def clean_cookie(self):
+        sql = "DELETE FROM Cookie"
+        await self.__cursor.execute(sql)
+
 #dynamic process
     async def select_dyn_content(self,dyn_id: str):
         sql = "SELECT dyn_content FROM Dynamic WHERE dyn_id=?"

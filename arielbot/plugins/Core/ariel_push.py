@@ -47,32 +47,32 @@ class DynPusher(PublicPusher):
         if task_list:
             await asyncio.gather(*[self.assign_tasks(i) for i in task_list])
     
-    @staticmethod
-    async def push_short_link_dynamic(short_link:str):
-        obj = Dynamic()
-        location = await obj.get_short_link_location(short_link=short_link)
-        if location is None:
-            return
-        match = re.search(r'/opus/(\d+)\?', location)
-        if not match:
-            return
-        message_id = match.group(1)
-        async with DataManager() as m:
-            dynamic = await m.select_dyn_content(message_id)
-        if not dynamic:
-            dynamic = await obj.get_dynamic_from_id(message_id)
-            if dynamic is None:
-                return
-            else:
-                async with DataManager() as m:
-                    await m.insert_dyn_data((message_id,dynamic.header.name,pickle.dumps(dynamic)))
-        else:
-            dynamic = pickle.loads(dynamic[0])
-        img = await DynRender(font_family="Noto Sans CJK SC").run(dynamic)
-        img = skia.Image.fromarray(img, colorType=skia.ColorType.kRGBA_8888_ColorType)
-        img_buffer = BytesIO()
-        img.save(img_buffer)
-        return MessageSegment.image(img_buffer)
+    # @staticmethod
+    # async def push_short_link_dynamic(short_link:str):
+    #     obj = Dynamic()
+    #     location = await obj.get_short_link_location(short_link=short_link)
+    #     if location is None:
+    #         return
+    #     match = re.search(r'/opus/(\d+)\?', location)
+    #     if not match:
+    #         return
+    #     message_id = match.group(1)
+    #     async with DataManager() as m:
+    #         dynamic = await m.select_dyn_content(message_id)
+    #     if not dynamic:
+    #         dynamic = await obj.get_dynamic_from_id(message_id)
+    #         if dynamic is None:
+    #             return
+    #         else:
+    #             async with DataManager() as m:
+    #                 await m.insert_dyn_data((message_id,dynamic.header.name,pickle.dumps(dynamic)))
+    #     else:
+    #         dynamic = pickle.loads(dynamic[0])
+    #     img = await DynRender(font_family="Noto Sans CJK SC").run(dynamic)
+    #     img = skia.Image.fromarray(img, colorType=skia.ColorType.kRGBA_8888_ColorType)
+    #     img_buffer = BytesIO()
+    #     img.save(img_buffer)
+    #     return MessageSegment.image(img_buffer)
 
     @staticmethod
     async def search_dyn_by_id(message_id):
