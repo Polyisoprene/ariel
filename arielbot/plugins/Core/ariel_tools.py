@@ -37,6 +37,7 @@ class LoginTools:
                     await bot.send(event,MessageSegment.text("cookie 解析失败"))
                     break
                 async with DataManager() as d:
+                    await d.delete_cookie()
                     await d.insert_cookie((pickle.dumps(cookies),scan_result["refresh_token"]))
                 break
             time.sleep(3)

@@ -6,7 +6,7 @@ from nonebot import logger
 from io import BytesIO
 from nonebot import get_bot
 from dynrender_skia.Core import DynRender
-from nonebot.adapters.onebot.v11 import MessageSegment,Bot,GroupMessageEvent
+from nonebot.adapters.onebot.v11 import MessageSegment,Bot
 from arielbot.plugins.Core.ariel_database import DataManager
 from arielbot.plugins.Core.ariel_bili import Dynamic,Live
 
