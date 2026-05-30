@@ -5,11 +5,11 @@ import nonebot
 
 
 env = {
-    'DRIVER':'~fastapi',
+    'DRIVER': '~fastapi',
     'SUPERUSERS': [],
-    'HOST':"127.0.0.1",
-    'PORT':12315,
-    'COMMAND_START':["/"]
+    'HOST': "127.0.0.1",
+    'PORT': 12315,
+    'COMMAND_START': ["/"]
 }
 
 
@@ -45,5 +45,3 @@ def create_plugins_dir():
     plugins_dir_path = path.join(getcwd(), "plugins")
     if not path.exists(plugins_dir_path):
         mkdir(plugins_dir_path)
-
-
