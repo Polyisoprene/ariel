@@ -52,6 +52,7 @@ class Container:
         self.auth_service = AuthService(
             self.bili_auth, self.cookie_repo, self.bot_client,
             parse_login_cookie, serialize_cookie,
+            cookie_manager=self.cookie_manager,
         )
         self.sub_service = SubscriptionService(
             self.bili_content, self.sub_target_repo, self.sub_channel_repo,

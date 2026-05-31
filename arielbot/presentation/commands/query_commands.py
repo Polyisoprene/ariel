@@ -23,7 +23,7 @@ def make_list_handler(query_service, matcher):
 
 
 def make_help_handler(query_service, matcher):
-    async def handler():
+    async def handler(event: GroupMessageEvent):
         img = await query_service.get_help_image()
         await matcher.finish(MessageSegment.image(img))
     return handler

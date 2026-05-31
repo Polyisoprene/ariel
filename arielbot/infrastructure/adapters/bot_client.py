@@ -1,4 +1,4 @@
-from nonebot import get_bot
+from nonebot import get_bot, logger
 from nonebot.adapters.onebot.v11 import Bot, MessageSegment
 from arielbot.domain.interfaces.bot_client import BotClient as BotClientABC
 
@@ -7,7 +7,11 @@ class BotClient(BotClientABC):
     async def send_group_msg(self, group_id: int, bot_id: int,
                               text: str = "", image: bytes = None,
                               cover: str = None) -> None:
-        bot: Bot = get_bot(str(bot_id))
+        try:
+            bot: Bot = get_bot(str(bot_id))
+        except KeyError:
+            logger.warning(f"Bot {bot_id} not connected, skip sending message to group {group_id}")
+            return
         message = MessageSegment.text(text)
         if image:
             message += MessageSegment.image(image)

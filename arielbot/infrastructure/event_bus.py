@@ -32,10 +32,12 @@ class SimpleEventBus(EventBus):
     async def _dispatch_loop(self):
         while True:
             event = await self._queue.get()
-            for handler in self._handlers.get(type(event), []):
-                try:
-                    await handler(event)
-                except Exception as e:
-                    logger.error(
-                        f"Event handler error for {type(event).__name__}: {e}"
-                    )
+            for event_type, handlers in self._handlers.items():
+                if isinstance(event, event_type):
+                    for handler in handlers:
+                        try:
+                            await handler(event)
+                        except Exception as e:
+                            logger.error(
+                                f"Event handler error for {type(event).__name__}: {e}"
+                            )

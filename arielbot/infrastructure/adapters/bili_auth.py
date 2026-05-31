@@ -138,6 +138,8 @@ class CookieManager:
                     r'<div\s+id\s*=\s*["\']1-name["\']\s*>(.*?)</div>', flags=re.DOTALL
                 )
                 match = pattern.search(response.text)
+                if not match:
+                    return None
                 return match.group(1).strip()
         except Exception as e:
             logger.error("get refresh_csrf error")
@@ -156,8 +158,10 @@ class CookieManager:
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, headers=self.headers, data=data, cookies=self._cookie)
                 new_refresh_token = response.json()["data"]["refresh_token"]
-                new_cookies = response.headers.get_list("Set-Cookie")
+                new_cookies = [v for k, v in response.headers.multi_items() if k.lower() == "set-cookie"]
                 parsed_cookies = [self._parse_cookie_attributes(c) for c in new_cookies]
+                if not parsed_cookies:
+                    return None
                 expires = parsed_cookies[0]["expires"]
                 dt = datetime.strptime(expires, "%a, %d %b %Y %H:%M:%S GMT").replace(
                     tzinfo=timezone.utc
@@ -176,11 +180,10 @@ class CookieManager:
     def _parse_cookie_attributes(self, cookie_str: str) -> dict:
         cookie = SimpleCookie()
         cookie.load(cookie_str)
-        parsed = {}
         for key, morsel in cookie.items():
-            parsed.update({
+            return {
                 "name": key,
                 "value": morsel.value,
                 "expires": morsel.get("expires", None),
-            })
-        return parsed
+            }
+        return {}

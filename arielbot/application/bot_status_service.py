@@ -14,7 +14,9 @@ class BotStatusService:
             await self._repo.save(bot_id, group_id, int(active), 1)
             return "bot已开启" if active else "bot已关闭"
         if int(active) == result[0]:
-            return None if not active else "bot已经为开启状态"
+            if not active:
+                return "bot已经为关闭状态"
+            return "bot已经为开启状态"
         await self._repo.update_push(bot_id, group_id, int(active))
         return "bot关闭成功" if not active else "bot开启成功"
 

@@ -13,10 +13,10 @@ class DatabaseManager:
         db_exists = path.exists(self._db_path)
         conn = await aiosqlite.connect(self._db_path)
         cursor = await conn.cursor()
+        await cursor.execute("PRAGMA foreign_keys = ON;")
         await cursor.execute("BEGIN")
         try:
             if not db_exists:
-                await cursor.execute("PRAGMA foreign_keys = ON;")
                 await cursor.executescript("""
                     CREATE TABLE IF NOT EXISTS subTarget (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -67,7 +67,7 @@ class SqlSubChannelRepository(SubChannelRepository):
                   AND t3.push_active = 1
                   AND t2.dyn_active = 1
                   AND t3.bot_active = 1
-            """, (int(uid),))
+            """, (uid,))
             rows = await cursor.fetchall()
             return [(r[0], r[1]) for r in rows] if rows else []
 

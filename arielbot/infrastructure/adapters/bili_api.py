@@ -162,7 +162,7 @@ class BiliContentAdapter(BiliContentAPI):
         if not await self._ensure_cookie():
             return "未登录"
         headers = {**self._headers,
-                   "host": "api.bilibili.com",
+                   "Host": "api.bilibili.com",
                    "origin": "https://t.bilibili.com",
                    "referer": "https://t.bilibili.com/"}
         params = {"mid": uid, "photo": "true", "web_location": "0.0"}
@@ -182,6 +182,9 @@ class BiliContentAdapter(BiliContentAPI):
     async def follow_user(self, uid: str, act: int) -> Optional[bool]:
         if not await self._ensure_cookie():
             return None
+        cookie = self._cookie
+        if cookie is None:
+            return None
         url = 'https://api.bilibili.com/x/relation/modify?statistics={"appId":100,"platform":5}&x-bili-device-req-json={"platform":"web","device":"pc","spmid":"0.0"}'
         data = {
             "fid": str(uid),
@@ -191,11 +194,11 @@ class BiliContentAdapter(BiliContentAPI):
             "spmid": "0.0",
             "extend_content": '{"entity":"user","entity_id":477332594}',
             "is_from_frontend_component": "true",
-            "csrf": self._cookie.get("bili_jct", ""),
+            "csrf": cookie.get("bili_jct", ""),
         }
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post(url, headers=self._headers, cookies=self._cookie, data=data)
+                response = await client.post(url, headers=self._headers, cookies=cookie, data=data)
                 response.raise_for_status()
                 if response.json()["code"] == 0:
                     return True

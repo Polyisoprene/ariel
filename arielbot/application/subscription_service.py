@@ -27,13 +27,16 @@ class SubscriptionService:
             uid_info = await self._api.get_user_info(uid)
             if isinstance(uid_info, str):
                 return uid_info
+            card = uid_info.get("card")
+            if not card or "name" not in card:
+                return "未找到相关UP信息"
             if uid_info.get("following") != True:
                 follow_result = await self._api.follow_user(uid, 1)
                 if not follow_result:
                     return "添加订阅失败"
-            await self._target_repo.save(uid, uid_info["card"]["name"], 0)
+            await self._target_repo.save(uid, card["name"], 0)
             await self._channel_repo.save(uid, group_id, bot_id)
-            return f"成功添加订阅 --> {uid_info['card']['name']}({uid})"
+            return f"成功添加订阅 --> {card['name']}({uid})"
 
     async def del_sub(self, uid: str, group_id: int, bot_id: int) -> str:
         check_in_group = await self._channel_repo.get(uid, group_id, bot_id)
@@ -41,7 +44,9 @@ class SubscriptionService:
             return f"本群没有订阅 --> {uid}"
         await self._channel_repo.update(0, 0, uid, group_id, bot_id)
         uid_info = await self._target_repo.get(uid)
-        return f"成功删除订阅 --> {uid_info[0]}({uid})"
+        if uid_info:
+            return f"成功删除订阅 --> {uid_info[0]}({uid})"
+        return f"成功删除订阅 --> {uid}"
 
     async def toggle_live(self, uid: str, group_id: int, bot_id: int, active: bool) -> str:
         check_in_group = await self._channel_repo.get(uid, group_id, bot_id)

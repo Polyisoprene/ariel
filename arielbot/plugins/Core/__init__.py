@@ -11,7 +11,16 @@ from arielbot.presentation.middleware import register_lifecycle_hooks
 driver = get_driver()
 
 container = Container()
-container.event_bus.start()
 register_lifecycle_hooks(driver, container.event_bus)
 CommandRegistry.register_all(container)
 register_scheduled_jobs(scheduler, container.dyn_check_job, container.live_check_job)
+
+
+@driver.on_startup
+async def _():
+    await container.event_bus.start()
+
+
+@driver.on_shutdown
+async def _():
+    await container.event_bus.stop()
