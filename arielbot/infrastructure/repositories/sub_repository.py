@@ -37,6 +37,13 @@ class SqlSubChannelRepository(SubChannelRepository):
                 (live_active, dyn_active, uid, group_id, bot_id),
             )
 
+    async def delete(self, uid: str, group_id: int, bot_id: int) -> None:
+        async with self._db.transaction() as cursor:
+            await cursor.execute(
+                "DELETE FROM subChennal WHERE uid=? AND groupId=? AND bot=?",
+                (uid, group_id, bot_id),
+            )
+
     async def find_push_targets_for_dyn(self, uid: str) -> List[Tuple[int, int]]:
         async with self._db.transaction() as cursor:
             await cursor.execute("""

@@ -42,7 +42,7 @@ class SubscriptionService:
         ch = await self._channel_repo.get(uid, group_id, bot_id)
         if not ch:
             return f"本群没有订阅 --> {uid}"
-        await self._channel_repo.update(0, 0, uid, group_id, bot_id)
+        await self._channel_repo.delete(uid, group_id, bot_id)
         target = await self._target_repo.get(uid)
         if target:
             return f"成功删除订阅 --> {target.nickname}({uid})"

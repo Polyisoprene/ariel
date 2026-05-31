@@ -32,6 +32,10 @@ class SubChannelRepository(ABC):
         ...
 
     @abstractmethod
+    async def delete(self, uid: str, group_id: int, bot_id: int) -> None:
+        ...
+
+    @abstractmethod
     async def find_push_targets_for_dyn(self, uid: str) -> List[Tuple[int, int]]:
         ...
 
