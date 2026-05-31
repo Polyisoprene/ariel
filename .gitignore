@@ -139,6 +139,7 @@ venv.bak/
 .idea/
 
 # Project-specific
+data/
 data.sqlite
 data.sqlite-wal
 data.sqlite-shm
