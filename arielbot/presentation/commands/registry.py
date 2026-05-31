@@ -26,7 +26,9 @@ class CommandRegistry:
 
     @classmethod
     def register(cls, name: str, *,
-                 permission=None, aliases=None, rule=None):
+                 permission=
+              aliases=
+              rule=None):
         matcher = on_command(name, permission=permission,
                              aliases=aliases, rule=rule)
         cls._matchers[name] = matcher
@@ -56,7 +58,8 @@ class CommandRegistry:
             await handler(event, args)
 
         unsub_matcher = cls.register(
-            "unsub", None,
+            "unsub", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active, aliases={"删除"},
         )
@@ -66,7 +69,8 @@ class CommandRegistry:
             await handler(event, args)
 
         live_on_matcher = cls.register(
-            "live_on", None,
+            "live_on", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -76,7 +80,8 @@ class CommandRegistry:
             await handler(event, args)
 
         live_off_matcher = cls.register(
-            "live_off", None,
+            "live_off", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -86,7 +91,8 @@ class CommandRegistry:
             await handler(event, args)
 
         dyn_on_matcher = cls.register(
-            "dyn_on", None,
+            "dyn_on", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -96,7 +102,8 @@ class CommandRegistry:
             await handler(event, args)
 
         dyn_off_matcher = cls.register(
-            "dyn_off", None,
+            "dyn_off", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -106,7 +113,8 @@ class CommandRegistry:
             await handler(event, args)
 
         bot_on_matcher = cls.register(
-            "bot_on", None,
+            "bot_on", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
         )
         @bot_on_matcher.handle()
@@ -115,7 +123,8 @@ class CommandRegistry:
             await handler(event)
 
         bot_off_matcher = cls.register(
-            "bot_off", None,
+            "bot_off", 
+             
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
         )
         @bot_off_matcher.handle()
@@ -124,7 +133,8 @@ class CommandRegistry:
             await handler(event)
 
         list_matcher = cls.register(
-            "list", None, rule=bot_is_active, aliases={"列表"},
+            "list", 
+              rule=bot_is_active, aliases={"列表"},
         )
         @list_matcher.handle()
         async def _(event: GroupMessageEvent):
