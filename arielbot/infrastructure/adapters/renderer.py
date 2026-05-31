@@ -40,9 +40,10 @@ class SkiaSubListRenderer(SubListRenderer):
             rect = skia.Rect.MakeXYWH(0, 0, 1000, y)
             canvas.drawRect(rect, paint)
 
+        first_char = sub_data[0][1][0] if sub_data[0][1] else "订"
         typeface = skia.FontMgr().matchFamilyStyleCharacter(
             "Noto Sans CJK SC", skia.FontStyle().Normal(), ["zh", "en"],
-            ord(sub_data[0][1][0]),
+            ord(first_char),
         )
         paint.setStyle(skia.Paint.Style.kFill_Style)
         font = skia.Font(typeface, 16)

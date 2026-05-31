@@ -7,7 +7,7 @@ from arielbot.domain.interfaces.event_bus import EventBus
 class SimpleEventBus(EventBus):
     def __init__(self):
         self._handlers: Dict[Type, List[Callable]] = {}
-        self._queue: asyncio.Queue = asyncio.Queue()
+        self._queue: asyncio.Queue = asyncio.Queue(maxsize=100)
         self._task: Optional[asyncio.Task] = None
 
     def subscribe(self, event_type: Type, handler: Callable) -> None:
@@ -16,7 +16,10 @@ class SimpleEventBus(EventBus):
         self._handlers[event_type].append(handler)
 
     async def publish(self, event: Any) -> None:
-        await self._queue.put(event)
+        try:
+            self._queue.put_nowait(event)
+        except asyncio.QueueFull:
+            logger.warning(f"EventBus queue full, dropping {type(event).__name__}")
 
     async def start(self) -> None:
         self._task = asyncio.create_task(self._dispatch_loop())

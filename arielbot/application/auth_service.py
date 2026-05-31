@@ -30,7 +30,11 @@ class AuthService:
         img.save(qrcode_buffer)
         await bot.send(event, message=MessageSegment.image(qrcode_buffer))
 
+        deadline = asyncio.get_event_loop().time() + 300
         while True:
+            if asyncio.get_event_loop().time() > deadline:
+                await bot.send(event, "登录超时，请重新尝试")
+                break
             scan_result = await self._auth_api.poll_scan()
             if scan_result is None or scan_result.get("code") == 86038:
                 await bot.send(event, "登陆失败")
