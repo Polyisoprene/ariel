@@ -9,11 +9,11 @@ class BotStatusService:
         self._bus = event_bus
 
     async def toggle_push(self, bot_id: int, group_id: int, active: bool) -> Optional[str]:
-        result = await self._repo.get(bot_id, group_id)
-        if not result:
+        status = await self._repo.get(bot_id, group_id)
+        if not status:
             await self._repo.save(bot_id, group_id, int(active), 1)
             return "bot已开启" if active else "bot已关闭"
-        if int(active) == result[0]:
+        if int(active) == status.push_active:
             if not active:
                 return "bot已经为关闭状态"
             return "bot已经为开启状态"
@@ -25,7 +25,7 @@ class BotStatusService:
         if not status:
             await self._repo.save(bot_id, group_id, 1, 1)
             return True
-        return bool(status[0] and status[1])
+        return bool(status.push_active and status.bot_active)
 
     async def on_bot_connect(self, bot_id: int) -> None:
         await self._repo.update_active(bot_id, 1)

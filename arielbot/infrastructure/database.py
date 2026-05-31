@@ -49,7 +49,8 @@ class DatabaseManager:
                 bot INTEGER NOT NULL,
                 groupId INTEGER NOT NULL,
                 push_active INTEGER NOT NULL DEFAULT 1 CHECK(push_active IN (0, 1)),
-                bot_active INTEGER NOT NULL DEFAULT 1 CHECK(bot_active IN (0, 1))
+                bot_active INTEGER NOT NULL DEFAULT 1 CHECK(bot_active IN (0, 1)),
+                UNIQUE(bot, groupId)
             );
             CREATE TABLE IF NOT EXISTS Cookie (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

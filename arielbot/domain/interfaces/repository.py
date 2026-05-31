@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
+from arielbot.domain.entities import SubTarget, SubChannel, BotStatus
 
 
 class SubTargetRepository(ABC):
     @abstractmethod
-    async def get(self, uid: str) -> Optional[tuple]:
+    async def get(self, uid: str) -> Optional[SubTarget]:
         ...
 
     @abstractmethod
@@ -18,7 +19,7 @@ class SubTargetRepository(ABC):
 
 class SubChannelRepository(ABC):
     @abstractmethod
-    async def get(self, uid: str, group_id: int, bot_id: int) -> Optional[tuple]:
+    async def get(self, uid: str, group_id: int, bot_id: int) -> Optional[SubChannel]:
         ...
 
     @abstractmethod
@@ -49,7 +50,7 @@ class SubChannelRepository(ABC):
 
 class BotStatusRepository(ABC):
     @abstractmethod
-    async def get(self, bot_id: int, group_id: int) -> Optional[tuple]:
+    async def get(self, bot_id: int, group_id: int) -> Optional[BotStatus]:
         ...
 
     @abstractmethod

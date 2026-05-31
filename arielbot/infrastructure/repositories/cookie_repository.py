@@ -9,7 +9,7 @@ class SqlCookieRepository(CookieRepository):
 
     async def get(self) -> Optional[tuple]:
         async with self._db.transaction() as cursor:
-            await cursor.execute("SELECT cookie, refresh_token FROM Cookie")
+            await cursor.execute("SELECT cookie, refresh_token FROM Cookie ORDER BY id DESC LIMIT 1")
             return await cursor.fetchone()
 
     async def save(self, cookie_blob: bytes, refresh_token: str) -> None:
