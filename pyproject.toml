@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arielBot"
-version = "0.4.9"
+version = "0.5.1"
 description = ""
 authors = ["Polyisoprene <lzxder@outlook.com>"]
 license = "MIT"
@@ -16,7 +16,7 @@ aiosqlite = "^0.21.0"
 pycryptodome = "^3.21.0"
 qrcode = "^8.0"
 pypng = "^0.20220715.0"
-dynrender-skia = "^0.2.9"
+dynrender-skia = "^0.3.0"
 nonebot-plugin-apscheduler = "^0.5.0"
 python-dotenv = "^1.0"
 dynamicadaptor = "^0.5.5"
@@ -35,9 +35,4 @@ ariel = "arielbot.__init__:main"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[[tool.poetry.source]]
-name = "ali"
-url = "https://mirrors.aliyun.com/pypi/simple/"
-priority = "primary"
 
