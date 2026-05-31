@@ -19,11 +19,12 @@ def _find_cjk_typeface() -> skia.Typeface:
 
 class SkiaDynRenderer(DynRenderer):
     async def render(self, dynamic: object) -> bytes:
+        img = await DynRender(font_family="Noto Sans CJK SC").run(dynamic)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self._render_sync, dynamic)
+        return await loop.run_in_executor(None, self._to_bytes, img)
 
-    def _render_sync(self, dynamic: object) -> bytes:
-        img = DynRender(font_family="Noto Sans CJK SC").run(dynamic)
+    @staticmethod
+    def _to_bytes(img) -> bytes:
         skia_img = skia.Image.fromarray(
             img, colorType=skia.ColorType.kRGBA_8888_ColorType
         )
