@@ -26,9 +26,7 @@ class CommandRegistry:
 
     @classmethod
     def register(cls, name: str, *,
-                 permission=
-              aliases=
-              rule=None):
+                 permission=None, aliases=None, rule=None):
         matcher = on_command(name, permission=permission,
                              aliases=aliases, rule=rule)
         cls._matchers[name] = matcher
@@ -59,7 +57,7 @@ class CommandRegistry:
 
         unsub_matcher = cls.register(
             "unsub", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active, aliases={"删除"},
         )
@@ -70,7 +68,7 @@ class CommandRegistry:
 
         live_on_matcher = cls.register(
             "live_on", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -81,7 +79,7 @@ class CommandRegistry:
 
         live_off_matcher = cls.register(
             "live_off", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -92,7 +90,7 @@ class CommandRegistry:
 
         dyn_on_matcher = cls.register(
             "dyn_on", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -103,7 +101,7 @@ class CommandRegistry:
 
         dyn_off_matcher = cls.register(
             "dyn_off", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
             rule=bot_is_active,
         )
@@ -114,7 +112,7 @@ class CommandRegistry:
 
         bot_on_matcher = cls.register(
             "bot_on", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
         )
         @bot_on_matcher.handle()
@@ -124,7 +122,7 @@ class CommandRegistry:
 
         bot_off_matcher = cls.register(
             "bot_off", 
-             
+
             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
         )
         @bot_off_matcher.handle()
