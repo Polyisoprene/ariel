@@ -18,6 +18,13 @@ class BotStatusService:
         await self._repo.update_push(bot_id, group_id, int(active))
         return "bot关闭成功" if not active else "bot开启成功"
 
+    async def is_bot_active(self, bot_id: int, group_id: int) -> bool:
+        status = await self._repo.get(bot_id, group_id)
+        if not status:
+            await self._repo.save(bot_id, group_id, 1, 1)
+            return True
+        return bool(status[0] and status[1])
+
     async def on_bot_connect(self, bot_id: int) -> None:
         await self._repo.update_active(bot_id, 1)
 

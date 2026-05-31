@@ -1,4 +1,4 @@
-import time
+import asyncio
 import qrcode
 from io import BytesIO
 from arielbot.domain.interfaces.api import BiliAuthAPI
@@ -43,4 +43,4 @@ class AuthService:
                     self._serialize_cookie(cookies), scan_result["refresh_token"]
                 )
                 break
-            time.sleep(3)
+            await asyncio.sleep(3)

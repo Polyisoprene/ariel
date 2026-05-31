@@ -2,13 +2,9 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from arielbot.domain.events import BotConnected, BotDisconnected, BotShutdown
 
 
-def make_bot_is_active_rule(bot_repo):
+def make_bot_is_active_rule(bot_status_service):
     async def bot_is_active(event: GroupMessageEvent) -> bool:
-        status = await bot_repo.get(event.self_id, event.group_id)
-        if not status:
-            await bot_repo.save(event.self_id, event.group_id, 1, 1)
-            return True
-        return bool(status[0] and status[1])
+        return await bot_status_service.is_bot_active(event.self_id, event.group_id)
     return bot_is_active
 
 

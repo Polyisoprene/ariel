@@ -1,6 +1,6 @@
 from arielbot.domain.events import DynamicDetected, LiveStatusChanged
 from arielbot.domain.events import BotConnected, BotDisconnected, BotShutdown
-from arielbot.infrastructure.adapters.bot_client import BotClient
+from arielbot.domain.interfaces.bot_client import BotClient
 
 
 class DynPushHandler:

@@ -1,6 +1,32 @@
 from typing import List, Optional, Tuple
-from arielbot.domain.interfaces.repository import SubChannelRepository
+from arielbot.domain.interfaces.repository import SubTargetRepository, SubChannelRepository
 from arielbot.infrastructure.database import DatabaseManager
+
+
+class SqlSubTargetRepository(SubTargetRepository):
+    def __init__(self, db: DatabaseManager):
+        self._db = db
+
+    async def get(self, uid: str) -> Optional[tuple]:
+        async with self._db.transaction() as cursor:
+            await cursor.execute(
+                "SELECT nickname FROM subTarget WHERE uid=?", (uid,)
+            )
+            return await cursor.fetchone()
+
+    async def save(self, uid: str, nickname: str, live_status: int) -> None:
+        async with self._db.transaction() as cursor:
+            await cursor.execute(
+                "INSERT INTO subTarget (uid, nickname, live_status) VALUES (?, ?, ?)",
+                (uid, nickname, live_status),
+            )
+
+    async def update(self, nickname: str, live_status: int, uid: str) -> None:
+        async with self._db.transaction() as cursor:
+            await cursor.execute(
+                "UPDATE subTarget SET nickname=?, live_status=? WHERE uid=?",
+                (nickname, live_status, uid),
+            )
 
 
 class SqlSubChannelRepository(SubChannelRepository):

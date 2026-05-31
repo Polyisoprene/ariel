@@ -44,7 +44,7 @@ class Container:
 
         self.bili_auth = BiliAuthAdapter()
         self.cookie_manager = CookieManager(self.cookie_repo)
-        self.bili_content = BiliContentAdapter(self.cookie_repo)
+        self.bili_content = BiliContentAdapter(self.cookie_manager)
         self.dyn_renderer = SkiaDynRenderer()
         self.sub_list_renderer = SkiaSubListRenderer()
         self.bot_client = BotClient()

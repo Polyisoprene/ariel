@@ -34,5 +34,5 @@ class BiliContentAPI(ABC):
         ...
 
     @abstractmethod
-    async def follow_user(self, uid: str, act: int) -> bool:
+    async def follow_user(self, uid: str, act: int) -> Optional[bool]:
         ...
