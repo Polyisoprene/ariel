@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from arielbot.infrastructure.adapters.bili_wbi import (
+from arielbot.infrastructure.adapters.bili_cookie_utils import (
     parse_login_cookie, serialize_cookie, deserialize_cookie,
 )
 from arielbot.infrastructure.adapters.bot_client import BotClient

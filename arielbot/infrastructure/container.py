@@ -1,9 +1,7 @@
 from arielbot.infrastructure.database import DatabaseManager
 from arielbot.infrastructure.event_bus import SimpleEventBus
-from arielbot.infrastructure.repositories.sub_repository import (
-    SqlSubTargetRepository,
-    SqlSubChannelRepository,
-)
+from arielbot.infrastructure.repositories.target_repository import SqlSubTargetRepository
+from arielbot.infrastructure.repositories.sub_repository import SqlSubChannelRepository
 from arielbot.infrastructure.repositories.bot_repository import SqlBotStatusRepository
 from arielbot.infrastructure.repositories.cookie_repository import SqlCookieRepository
 from arielbot.infrastructure.repositories.dyn_repository import SqlDynCacheRepository
@@ -11,7 +9,7 @@ from arielbot.infrastructure.adapters.bili_auth import BiliAuthAdapter, CookieMa
 from arielbot.infrastructure.adapters.bili_api import BiliContentAdapter
 from arielbot.infrastructure.adapters.renderer import SkiaDynRenderer, SkiaSubListRenderer
 from arielbot.infrastructure.adapters.bot_client import BotClient
-from arielbot.infrastructure.adapters.bili_wbi import parse_login_cookie, serialize_cookie
+from arielbot.infrastructure.adapters.bili_cookie_utils import parse_login_cookie, serialize_cookie
 from arielbot.presentation.message_utils import text, image
 from arielbot.application.auth_service import AuthService
 from arielbot.application.subscription_service import SubscriptionService
