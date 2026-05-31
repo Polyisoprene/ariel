@@ -46,10 +46,14 @@ def make_img_handler(query_service, matcher):
         dyn_id = args.extract_plain_text()
         if not dyn_id or not dyn_id.isdigit():
             return
-        result = await query_service.get_dyn_images(dyn_id)
-        if result is None:
+        urls = await query_service.get_dyn_image_urls(dyn_id)
+        if urls is None:
             return
-        if isinstance(result, str):
-            await matcher.finish(result)
-        await matcher.finish(result)
+        if not urls:
+            await matcher.finish("此动态没有图片")
+            return
+        message = MessageSegment.text("")
+        for url in urls:
+            message += MessageSegment.image(url)
+        await matcher.finish(message)
     return handler

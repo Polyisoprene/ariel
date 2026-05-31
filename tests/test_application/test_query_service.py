@@ -91,7 +91,7 @@ class TestGetDynImage:
         assert result is None
 
 
-class TestGetDynImages:
+class TestGetDynImageUrls:
     async def test_cache_hit_opus_type(self, service, mock_dyn_cache):
         dyn = FakeDynamic(
             message_id="123",
@@ -99,19 +99,19 @@ class TestGetDynImages:
             major=FakeMajor(type="MAJOR_TYPE_OPUS", opus=FakeOpus(pics=[FakePic(url="http://img.url")])),
         )
         mock_dyn_cache.exists.return_value = pickle.dumps(dyn)
-        result = await service.get_dyn_images("123")
-        assert "http://img.url" in str(result)
+        result = await service.get_dyn_image_urls("123")
+        assert result == ["http://img.url"]
 
     async def test_cache_hit_no_images(self, service, mock_dyn_cache):
         dyn = FakeDynamic(message_id="123", header=FakeHeader(name="up"), major=FakeMajor(type="OTHER"))
         mock_dyn_cache.exists.return_value = pickle.dumps(dyn)
-        result = await service.get_dyn_images("123")
-        assert result == "此动态没有图片"
+        result = await service.get_dyn_image_urls("123")
+        assert result == []
 
     async def test_cache_miss_api_none(self, service, mock_api, mock_dyn_cache):
         mock_dyn_cache.exists.return_value = None
         mock_api.get_dynamic_by_id.return_value = None
-        result = await service.get_dyn_images("123")
+        result = await service.get_dyn_image_urls("123")
         assert result is None
 
 

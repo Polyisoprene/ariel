@@ -1,6 +1,5 @@
 import pickle
-from typing import Optional
-from nonebot.adapters.onebot.v11 import MessageSegment
+from typing import List, Optional
 from arielbot.domain.interfaces.api import BiliContentAPI
 from arielbot.domain.interfaces.repository import DynCacheRepository, SubChannelRepository
 from arielbot.domain.interfaces.renderer import DynRenderer, SubListRenderer
@@ -31,7 +30,7 @@ class QueryService:
             )
         return await self._dyn_renderer.render(dynamic)
 
-    async def get_dyn_images(self, dyn_id: str):
+    async def get_dyn_image_urls(self, dyn_id: str) -> Optional[List[str]]:
         cached = await self._dyn_cache_repo.exists(dyn_id)
         if cached:
             dynamic = pickle.loads(cached)
@@ -43,11 +42,8 @@ class QueryService:
                 dyn_id, dynamic.header.name, pickle.dumps(dynamic)
             )
         if dynamic.major.type == "MAJOR_TYPE_OPUS":
-            message = ""
-            for pic in dynamic.major.opus.pics:
-                message += MessageSegment.image(pic.url)
-            return message
-        return "此动态没有图片"
+            return [pic.url for pic in dynamic.major.opus.pics]
+        return []
 
     async def get_sub_list(self, bot_id: int, group_id: int) -> Optional[bytes]:
         data = await self._sub_channel_repo.list_by_group(bot_id, group_id)

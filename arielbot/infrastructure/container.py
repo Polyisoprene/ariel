@@ -12,6 +12,7 @@ from arielbot.infrastructure.adapters.bili_api import BiliContentAdapter
 from arielbot.infrastructure.adapters.renderer import SkiaDynRenderer, SkiaSubListRenderer
 from arielbot.infrastructure.adapters.bot_client import BotClient
 from arielbot.infrastructure.adapters.bili_wbi import parse_login_cookie, serialize_cookie
+from arielbot.presentation.message_utils import text, image
 from arielbot.application.auth_service import AuthService
 from arielbot.application.subscription_service import SubscriptionService
 from arielbot.application.query_service import QueryService
@@ -53,6 +54,7 @@ class Container:
             self.bili_auth, self.cookie_repo, self.bot_client,
             parse_login_cookie, serialize_cookie,
             cookie_manager=self.cookie_manager,
+            build_text=text, build_image=image,
         )
         self.sub_service = SubscriptionService(
             self.bili_content, self.sub_target_repo, self.sub_channel_repo,
