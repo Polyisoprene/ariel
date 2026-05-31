@@ -41,7 +41,7 @@ class QueryService:
             await self._dyn_cache_repo.save(
                 dyn_id, dynamic.header.name, pickle.dumps(dynamic)
             )
-        if dynamic.major.type == "MAJOR_TYPE_OPUS":
+        if dynamic.major and dynamic.major.type == "MAJOR_TYPE_OPUS" and dynamic.major.opus:
             return [pic.url for pic in dynamic.major.opus.pics]
         return []
 

@@ -166,7 +166,10 @@ class CookieManager:
             parsed_cookies = [self._parse_cookie_attributes(c) for c in new_cookies]
             if not parsed_cookies:
                 return None
-            expires = parsed_cookies[0]["expires"]
+            expires = parsed_cookies[0].get("expires")
+            if not expires:
+                logger.error("Set-Cookie has no Expires attribute, cookie refresh failed")
+                return None
             dt = datetime.strptime(expires, "%a, %d %b %Y %H:%M:%S GMT").replace(
                 tzinfo=timezone.utc
             )

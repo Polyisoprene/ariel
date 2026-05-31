@@ -49,7 +49,7 @@ class AuthService:
         qr.add_data(scan_url)
         img = qr.make_image(image_factory=qrcode.image.pure.PyPNGImage)
         img.save(qrcode_buffer)
-        await bot.send(event, message=self._build_image(qrcode_buffer))
+        await bot.send(event, message=self._build_image(qrcode_buffer.getvalue()))
 
     async def _poll_scan_result(self):
         while True:

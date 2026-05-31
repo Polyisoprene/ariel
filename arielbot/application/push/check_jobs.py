@@ -81,14 +81,14 @@ class LiveCheckJob:
             if all_live_status.get(k) == v["live_status"]:
                 continue
             if all_live_status.get(k) == 1:
-                await self._target_repo.update(v["uname"], 0, v["uid"])
+                await self._target_repo.update(v["uname"], 0, str(v["uid"]))
                 continue
-            await self._target_repo.update(v["uname"], 1, v["uid"])
-            targets = await self._channel_repo.find_push_targets_for_live(v["uid"])
+            await self._target_repo.update(v["uname"], 1, str(v["uid"]))
+            targets = await self._channel_repo.find_push_targets_for_live(str(v["uid"]))
             if not targets:
                 continue
             await self._event_bus.publish(LiveStatusChanged(
-                uid=v["uid"],
+                uid=str(v["uid"]),
                 uname=v["uname"],
                 room_id=v["room_id"],
                 title=v["title"],
