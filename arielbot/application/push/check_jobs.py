@@ -37,13 +37,16 @@ class DynCheckJob:
             targets = await self._sub_channel_repo.find_push_targets_for_dyn(
                 dynamic.header.mid
             )
+            if not targets:
+                logger.info("没有需要推送的群，跳过该动态")
+                await self._dyn_cache_repo.save(
+                    dynamic.message_id, dynamic.header.name, pickle.dumps(dynamic)
+                )
+                continue
+            rendered = await self._dyn_renderer.render(dynamic)
             await self._dyn_cache_repo.save(
                 dynamic.message_id, dynamic.header.name, pickle.dumps(dynamic)
             )
-            if not targets:
-                logger.info("没有需要推送的群，跳过该动态")
-                continue
-            rendered = await self._dyn_renderer.render(dynamic)
             await self._event_bus.publish(DynamicDetected(
                 dynamic=dynamic,
                 dyn_id=dynamic.message_id,
@@ -67,7 +70,7 @@ class LiveCheckJob:
         all_check_uid_list = await self._channel_repo.find_live_check_uids()
         if not all_check_uid_list:
             return
-        all_live_status = {f"{row[0]}": row[1] for row in all_check_uid_list}
+        all_live_status = {row[0]: row[1] for row in all_check_uid_list}
         uid_list = [row[0] for row in all_check_uid_list]
         check_result = await self._api.get_room_info_by_uids(uid_list)
         if check_result is None:

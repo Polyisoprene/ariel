@@ -24,3 +24,4 @@ async def _():
 @driver.on_shutdown
 async def _():
     await container.event_bus.stop()
+    await container.close()

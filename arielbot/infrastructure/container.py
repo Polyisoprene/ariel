@@ -83,3 +83,8 @@ class Container:
         bus.subscribe(BotConnected, lifecycle.on_connect)
         bus.subscribe(BotDisconnected, lifecycle.on_disconnect)
         bus.subscribe(BotShutdown, lifecycle.on_shutdown)
+
+    async def close(self):
+        await self.bili_auth.close()
+        await self.cookie_manager.close()
+        await self.bili_content.close()

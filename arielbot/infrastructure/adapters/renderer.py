@@ -1,3 +1,4 @@
+import asyncio
 import skia
 from io import BytesIO
 from typing import List, Tuple
@@ -7,7 +8,11 @@ from arielbot.domain.interfaces.renderer import DynRenderer, SubListRenderer
 
 class SkiaDynRenderer(DynRenderer):
     async def render(self, dynamic: object) -> bytes:
-        img = await DynRender(font_family="Noto Sans CJK SC").run(dynamic)
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self._render_sync, dynamic)
+
+    def _render_sync(self, dynamic: object) -> bytes:
+        img = DynRender(font_family="Noto Sans CJK SC").run(dynamic)
         skia_img = skia.Image.fromarray(
             img, colorType=skia.ColorType.kRGBA_8888_ColorType
         )
@@ -18,7 +23,11 @@ class SkiaDynRenderer(DynRenderer):
 
 class SkiaSubListRenderer(SubListRenderer):
     async def render(self, data: List[Tuple[str, str, bool, bool]]) -> bytes:
-        sub_data = [(uid, nickname, live_active, dyn_active) for uid, nickname, live_active, dyn_active in data]
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self._render_sync, data)
+
+    def _render_sync(self, data: List[Tuple[str, str, bool, bool]]) -> bytes:
+        sub_data = list(data)
         if len(sub_data) <= 8:
             img_height = 540
         else:

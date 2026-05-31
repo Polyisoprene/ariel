@@ -20,15 +20,24 @@ _sign_headers = {
     "Referer": "https://www.bilibili.com/"
 }
 
+_BASE_HEADERS = {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+    "origin": "https://t.bilibili.com",
+}
+
+_WBI_TTL = 3600
+
 
 class BiliContentAdapter(BiliContentAPI):
     def __init__(self, cookie_manager: CookieManager):
         self._cookie_mgr = cookie_manager
-        self._headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0"
-        }
+        self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
         self._img_key = None
         self._sub_key = None
+        self._wbi_cached_at = 0.0
+
+    async def close(self):
+        await self._client.aclose()
 
     async def _ensure_cookie(self) -> bool:
         cookie = await self._cookie_mgr.ensure_cookie()
@@ -39,15 +48,19 @@ class BiliContentAdapter(BiliContentAPI):
         return self._cookie_mgr.cookie
 
     async def _get_wbi_keys(self):
+        if self._img_key and self._sub_key and time.time() - self._wbi_cached_at < _WBI_TTL:
+            return
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get("https://api.bilibili.com/x/web-interface/nav", headers=_sign_headers)
-                resp.raise_for_status()
-                json_content = resp.json()
-                img_url = json_content["data"]["wbi_img"]["img_url"]
-                sub_url = json_content["data"]["wbi_img"]["sub_url"]
-                self._img_key = img_url.rsplit("/", 1)[1].split(".")[0]
-                self._sub_key = sub_url.rsplit("/", 1)[1].split(".")[0]
+            resp = await self._client.get(
+                "https://api.bilibili.com/x/web-interface/nav", headers=_sign_headers
+            )
+            resp.raise_for_status()
+            json_content = resp.json()
+            img_url = json_content["data"]["wbi_img"]["img_url"]
+            sub_url = json_content["data"]["wbi_img"]["sub_url"]
+            self._img_key = img_url.rsplit("/", 1)[1].split(".")[0]
+            self._sub_key = sub_url.rsplit("/", 1)[1].split(".")[0]
+            self._wbi_cached_at = time.time()
         except Exception as e:
             logger.error(e)
 
@@ -71,9 +84,7 @@ class BiliContentAdapter(BiliContentAPI):
     async def get_follow_dynamics(self) -> Optional[list]:
         if not await self._ensure_cookie():
             return None
-        headers = {**self._headers,
-                   "referer": "https://t.bilibili.com/?spm_id_from=333.1007.0.0",
-                   "origin": "https://t.bilibili.com"}
+        headers = {**_BASE_HEADERS, "referer": "https://t.bilibili.com/?spm_id_from=333.1007.0.0"}
         params = {
             "timezone_offset": "-480",
             "type": "all",
@@ -83,17 +94,16 @@ class BiliContentAdapter(BiliContentAPI):
             "features": "itemOpusStyle,listOnlyfans,opusBigCover,onlyfansVote,decorationCard,onlyfansAssetsV2,forwardListHidden,ugcDelete,onlyfansQaCard,commentsNewVersion",
         }
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all",
-                    headers=headers, cookies=self._cookie, params=params,
-                )
-                response.raise_for_status()
-                data = response.json()
-                if data["code"] != 0:
-                    logger.warning("get dynamic from follow list data code is not 0")
-                    return None
-                return [await formate_message("web", i) for i in data["data"]["items"]]
+            response = await self._client.get(
+                "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all",
+                headers=headers, cookies=self._cookie, params=params,
+            )
+            response.raise_for_status()
+            data = response.json()
+            if data["code"] != 0:
+                logger.warning("get dynamic from follow list data code is not 0")
+                return None
+            return [await formate_message("web", i) for i in data["data"]["items"]]
         except Exception as e:
             logger.warning(f"get dynamic from follow list error {e}")
             return None
@@ -105,9 +115,7 @@ class BiliContentAdapter(BiliContentAPI):
         if self._img_key is None or self._sub_key is None:
             logger.warning("get img_key or sub_key error")
             return None
-        headers = {**self._headers,
-                   "referer": f"https://t.bilibili.com/{dyn_id}?spm_id_from=333.1365.list.card_time.click",
-                   "origin": "https://t.bilibili.com"}
+        headers = {**_BASE_HEADERS, "referer": f"https://t.bilibili.com/{dyn_id}?spm_id_from=333.1365.list.card_time.click"}
         params = {
             "timezone_offset": "-480",
             "platform": "web",
@@ -117,13 +125,12 @@ class BiliContentAdapter(BiliContentAPI):
         }
         signed_params = await self._enc_wbi(params)
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://api.bilibili.com/x/polymer/web-dynamic/v1/detail",
-                    headers=headers, params=signed_params, cookies=self._cookie,
-                )
-                response.raise_for_status()
-                return await formate_message("web", response.json()["data"]["item"])
+            response = await self._client.get(
+                "https://api.bilibili.com/x/polymer/web-dynamic/v1/detail",
+                headers=headers, params=signed_params, cookies=self._cookie,
+            )
+            response.raise_for_status()
+            return await formate_message("web", response.json()["data"]["item"])
         except Exception as e:
             logger.error(e)
             return None
@@ -131,18 +138,15 @@ class BiliContentAdapter(BiliContentAPI):
     async def get_live_users(self) -> Optional[dict]:
         if not await self._ensure_cookie():
             return None
-        headers = {**self._headers,
-                   "referer": "https://t.bilibili.com/?spm_id_from=333.1007.0.0",
-                   "origin": "https://t.bilibili.com"}
+        headers = {**_BASE_HEADERS, "referer": "https://t.bilibili.com/?spm_id_from=333.1007.0.0"}
         params = {"up_list_more": 1, "web_location": 333.1365}
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal",
-                    headers=headers, cookies=self._cookie, params=params,
-                )
-                response.raise_for_status()
-                return response.json()["data"]["live_users"]
+            response = await self._client.get(
+                "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal",
+                headers=headers, cookies=self._cookie, params=params,
+            )
+            response.raise_for_status()
+            return response.json()["data"]["live_users"]
         except Exception as e:
             logger.error(e)
             return None
@@ -150,10 +154,9 @@ class BiliContentAdapter(BiliContentAPI):
     async def get_room_info_by_uids(self, uids: List[str]) -> Optional[dict]:
         url = "https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids"
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, headers=self._headers, json={"uids": uids})
-                response.raise_for_status()
-                return response.json()["data"]
+            response = await self._client.post(url, headers=_BASE_HEADERS, json={"uids": uids})
+            response.raise_for_status()
+            return response.json()["data"]
         except Exception as e:
             logger.error(e)
             return None
@@ -161,21 +164,18 @@ class BiliContentAdapter(BiliContentAPI):
     async def get_user_info(self, uid: str):
         if not await self._ensure_cookie():
             return "未登录"
-        headers = {**self._headers,
-                   "Host": "api.bilibili.com",
-                   "origin": "https://t.bilibili.com",
-                   "referer": "https://t.bilibili.com/"}
+        headers = {**_BASE_HEADERS, "Host": "api.bilibili.com", "referer": "https://t.bilibili.com/"}
         params = {"mid": uid, "photo": "true", "web_location": "0.0"}
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://api.bilibili.com/x/web-interface/card",
-                    headers=headers, cookies=self._cookie, params=params,
-                )
-                response.raise_for_status()
-                if response.json()["code"] != 0:
-                    return "未找到相关UP信息"
-                return response.json()["data"]
+            response = await self._client.get(
+                "https://api.bilibili.com/x/web-interface/card",
+                headers=headers, cookies=self._cookie, params=params,
+            )
+            response.raise_for_status()
+            data = response.json()
+            if data["code"] != 0:
+                return "未找到相关UP信息"
+            return data["data"]
         except Exception as e:
             return str(e)
 
@@ -197,12 +197,12 @@ class BiliContentAdapter(BiliContentAPI):
             "csrf": cookie.get("bili_jct", ""),
         }
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, headers=self._headers, cookies=cookie, data=data)
-                response.raise_for_status()
-                if response.json()["code"] == 0:
-                    return True
-                return None
+            response = await self._client.post(url, headers=_BASE_HEADERS, cookies=cookie, data=data)
+            response.raise_for_status()
+            resp_data = response.json()
+            if resp_data["code"] == 0:
+                return True
+            return None
         except Exception as e:
             logger.error(e)
             return None

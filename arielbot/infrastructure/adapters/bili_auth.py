@@ -23,22 +23,28 @@ _RSA_KEY = RSA.importKey(
 _HEADERS = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0"
 }
+_REFRESH_CSRF_PATTERN = re.compile(
+    r'<div\s+id\s*=\s*["\']1-name["\']\s*>(.*?)</div>', flags=re.DOTALL
+)
 
 
 class BiliAuthAdapter(BiliAuthAPI):
     def __init__(self):
         self.qrcode_key = None
         self.headers = _HEADERS.copy()
+        self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+
+    async def close(self):
+        await self._client.aclose()
 
     async def get_qrcode(self) -> Optional[str]:
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=self.headers)
-                response.raise_for_status()
-                data = response.json()
-                self.qrcode_key = data["data"]["qrcode_key"]
-                return data["data"]["url"]
+            response = await self._client.get(url, headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
+            self.qrcode_key = data["data"]["qrcode_key"]
+            return data["data"]["url"]
         except Exception as e:
             logger.error(e)
             return None
@@ -47,10 +53,9 @@ class BiliAuthAdapter(BiliAuthAPI):
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
         params = {"qrcode_key": self.qrcode_key}
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=self.headers, params=params)
-                response.raise_for_status()
-                return response.json()["data"]
+            response = await self._client.get(url, headers=self.headers, params=params)
+            response.raise_for_status()
+            return response.json()["data"]
         except Exception as e:
             logger.error(e)
             return None
@@ -62,6 +67,10 @@ class CookieManager:
         self._cookie = None
         self._refresh_token = None
         self.headers = _HEADERS.copy()
+        self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+
+    async def close(self):
+        await self._client.aclose()
 
     @property
     def cookie(self):
@@ -118,13 +127,12 @@ class CookieManager:
         params = {"csrf": self._cookie.get("bili_jct", "")}
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/info"
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=self.headers, params=params, cookies=self._cookie)
-                cipher = PKCS1_OAEP.new(_RSA_KEY, SHA256)
-                encrypted = cipher.encrypt(
-                    f"refresh_{response.json()['data']['timestamp']}".encode()
-                )
-                return binascii.b2a_hex(encrypted).decode()
+            response = await self._client.get(url, headers=self.headers, params=params, cookies=self._cookie)
+            cipher = PKCS1_OAEP.new(_RSA_KEY, SHA256)
+            encrypted = cipher.encrypt(
+                f"refresh_{response.json()['data']['timestamp']}".encode()
+            )
+            return binascii.b2a_hex(encrypted).decode()
         except Exception as e:
             logger.error(e)
             return None
@@ -132,15 +140,11 @@ class CookieManager:
     async def _get_refresh_csrf(self, correspond_path):
         url = f"https://www.bilibili.com/correspond/1/{correspond_path}"
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=self.headers, cookies=self._cookie)
-                pattern = re.compile(
-                    r'<div\s+id\s*=\s*["\']1-name["\']\s*>(.*?)</div>', flags=re.DOTALL
-                )
-                match = pattern.search(response.text)
-                if not match:
-                    return None
-                return match.group(1).strip()
+            response = await self._client.get(url, headers=self.headers, cookies=self._cookie)
+            match = _REFRESH_CSRF_PATTERN.search(response.text)
+            if not match:
+                return None
+            return match.group(1).strip()
         except Exception as e:
             logger.error("get refresh_csrf error")
             logger.error(e)
@@ -155,23 +159,23 @@ class CookieManager:
             "refresh_token": self._refresh_token,
         }
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, headers=self.headers, data=data, cookies=self._cookie)
-                new_refresh_token = response.json()["data"]["refresh_token"]
-                new_cookies = [v for k, v in response.headers.multi_items() if k.lower() == "set-cookie"]
-                parsed_cookies = [self._parse_cookie_attributes(c) for c in new_cookies]
-                if not parsed_cookies:
-                    return None
-                expires = parsed_cookies[0]["expires"]
-                dt = datetime.strptime(expires, "%a, %d %b %Y %H:%M:%S GMT").replace(
-                    tzinfo=timezone.utc
-                )
-                new_cookie = {}
-                timestamp = int(dt.timestamp())
-                for item in parsed_cookies:
-                    new_cookie[item["name"]] = item["value"]
-                new_cookie["Expires"] = str(timestamp)
-                return (new_cookie, new_refresh_token)
+            response = await self._client.post(url, headers=self.headers, data=data, cookies=self._cookie)
+            resp_data = response.json()
+            new_refresh_token = resp_data["data"]["refresh_token"]
+            new_cookies = [v for k, v in response.headers.multi_items() if k.lower() == "set-cookie"]
+            parsed_cookies = [self._parse_cookie_attributes(c) for c in new_cookies]
+            if not parsed_cookies:
+                return None
+            expires = parsed_cookies[0]["expires"]
+            dt = datetime.strptime(expires, "%a, %d %b %Y %H:%M:%S GMT").replace(
+                tzinfo=timezone.utc
+            )
+            new_cookie = {}
+            timestamp = int(dt.timestamp())
+            for item in parsed_cookies:
+                new_cookie[item["name"]] = item["value"]
+            new_cookie["Expires"] = str(timestamp)
+            return (new_cookie, new_refresh_token)
         except Exception as e:
             logger.error("get new cookie error")
             logger.error(e)
