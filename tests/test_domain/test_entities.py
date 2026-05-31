@@ -1,7 +1,4 @@
-import pytest
-from arielbot.domain.entities import (
-    SubTarget, SubChannel, BotStatus, BiliCookie, DynamicCache, BiliUserInfo,
-)
+from arielbot.domain.entities import SubTarget, SubChannel, BotStatus
 
 
 class TestSubTarget:
@@ -31,23 +28,3 @@ class TestBotStatus:
     def test_create(self):
         b = BotStatus(bot_id=1, group_id=2, push_active=True, bot_active=True)
         assert b.push_active is True
-
-
-class TestBiliCookie:
-    def test_create(self):
-        c = BiliCookie(data={"a": "b"}, refresh_token="tok")
-        assert c.data == {"a": "b"}
-        assert c.refresh_token == "tok"
-
-
-class TestDynamicCache:
-    def test_create(self):
-        d = DynamicCache(dyn_id="123", uname="up", content=b"\x00")
-        assert d.dyn_id == "123"
-        assert isinstance(d.content, bytes)
-
-
-class TestBiliUserInfo:
-    def test_create(self):
-        u = BiliUserInfo(uid="1", name="name", is_following=True)
-        assert u.is_following is True
