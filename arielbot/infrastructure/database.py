@@ -17,8 +17,7 @@ class DatabaseManager:
         await cursor.execute("PRAGMA foreign_keys = ON;")
         await cursor.execute("BEGIN")
         try:
-            if not path.exists(self._db_path):
-                await self._create_tables(cursor)
+            await self._create_tables(cursor)
             yield cursor
             await conn.commit()
         except Exception:
