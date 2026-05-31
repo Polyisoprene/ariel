@@ -23,23 +23,3 @@ class BotStatus:
     group_id: int
     push_active: bool
     bot_active: bool
-
-
-@dataclass
-class BiliCookie:
-    data: dict
-    refresh_token: str
-
-
-@dataclass
-class DynamicCache:
-    dyn_id: str
-    uname: str
-    content: bytes
-
-
-@dataclass
-class BiliUserInfo:
-    uid: str
-    name: str
-    is_following: bool
