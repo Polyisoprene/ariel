@@ -1,4 +1,5 @@
 import click
+import json
 from os import path, getcwd, mkdir
 import dotenv
 import nonebot
@@ -33,10 +34,14 @@ def create_config():
     env_file_path = path.join(getcwd(), ".env.prod")
     if not path.exists(env_file_path):
         for key, value in env.items():
+            if isinstance(value, (list, dict)):
+                formatted = json.dumps(value, ensure_ascii=False)
+            else:
+                formatted = str(value).replace(' ', '')
             dotenv.set_key(
                 env_file_path,
                 key,
-                str(value).replace(' ', ''),
+                formatted,
                 quote_mode="never"
             )
 
