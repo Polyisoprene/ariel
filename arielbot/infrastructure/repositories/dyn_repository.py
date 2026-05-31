@@ -19,7 +19,7 @@ class SqlDynCacheRepository(DynCacheRepository):
     async def save(self, dyn_id: str, uname: str, content: bytes) -> None:
         async with self._db.transaction() as cursor:
             await cursor.execute(
-                "INSERT INTO Dynamic (dyn_id, uname, dyn_content) VALUES (?, ?, ?)",
+                "INSERT OR IGNORE INTO Dynamic (dyn_id, uname, dyn_content) VALUES (?, ?, ?)",
                 (dyn_id, uname, content),
             )
 
