@@ -1,11 +1,7 @@
 import aiosqlite
-import asyncio
 from os import path, getcwd
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
-
-_BUSY_RETRIES = 5
-_BUSY_DELAY = 0.1
 
 
 class DatabaseManager:
@@ -25,21 +21,6 @@ class DatabaseManager:
                 await self._create_tables(cursor)
             yield cursor
             await conn.commit()
-        except aiosqlite.Error as e:
-            await conn.rollback()
-            if "database is locked" in str(e).lower():
-                for attempt in range(_BUSY_RETRIES):
-                    await asyncio.sleep(_BUSY_DELAY * (attempt + 1))
-                    try:
-                        await cursor.execute("BEGIN")
-                        if not path.exists(self._db_path):
-                            await self._create_tables(cursor)
-                        yield cursor
-                        await conn.commit()
-                        return
-                    except aiosqlite.Error:
-                        continue
-            raise
         except Exception:
             await conn.rollback()
             raise
