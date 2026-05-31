@@ -133,9 +133,9 @@ class CommandRegistry:
 
         help_matcher = cls.register("help", None)
         @help_matcher.handle()
-        async def _():
+        async def _(event: GroupMessageEvent):
             handler = make_help_handler(container.query_service, help_matcher)
-            await handler()
+            await handler(event)
 
         sd_matcher = cls.register("sd", None)
         @sd_matcher.handle()
