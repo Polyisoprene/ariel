@@ -7,6 +7,7 @@ from typing import List, Optional
 from arielbot.domain.interfaces.api import BiliContentAPI
 from arielbot.domain.interfaces.repository import DynCacheRepository, SubChannelRepository
 from arielbot.domain.interfaces.renderer import DynRenderer, SubListRenderer
+from arielbot.infrastructure.adapters.renderer import _find_cjk_typeface
 
 _HELP_CACHE_PATH = os.path.join(os.getcwd(), "data", "help.png")
 
@@ -87,31 +88,24 @@ class QueryService:
         ]
 
         row_h = 32
-        header_h = 38
+        header_h = 36
         title_h = 44
         pad = 20
+        cols = [0, 130, 220, 340, 660]
         w = 680
         h = title_h + header_h + len(rows) * row_h + pad * 2
 
         surface = skia.Surface(w, h)
         canvas = surface.getCanvas()
         canvas.clear(skia.ColorWHITE)
+        paint = skia.Paint(Color=skia.ColorBLACK, StrokeWidth=1, AntiAlias=True, Style=skia.Paint.kStroke_Style)
 
-        typeface = skia.FontMgr().matchFamilyStyleCharacter(
-            "Noto Sans CJK SC", skia.FontStyle().Normal(), ["zh", "en"], ord("a"),
-        )
-
+        typeface = _find_cjk_typeface()
         title_font = skia.Font(typeface, 18)
         header_font = skia.Font(typeface, 14)
         body_font = skia.Font(typeface, 13)
 
-        paint = skia.Paint(
-            Color=skia.ColorBLACK, StrokeWidth=1, AntiAlias=True,
-            Style=skia.Paint.kStroke_Style,
-        )
-
         # grid lines
-        cols = [0, 120, 210, 320, w - pad]
         for x in cols:
             canvas.drawLine(x + pad, title_h + pad, x + pad, h - pad, paint)
         for y in range(title_h + pad, h - pad + 1, row_h):
@@ -119,25 +113,40 @@ class QueryService:
 
         paint.setStyle(skia.Paint.kFill_Style)
 
-        def draw_text(text, x, y, font, r=0, g=0, b=0):
+        def cell_rect(col_idx, y_offset):
+            left = cols[col_idx] + pad
+            right = cols[col_idx + 1] + pad if col_idx + 1 < len(cols) else w - pad
+            return left, right, y_offset + pad, y_offset + pad + row_h
+
+        def draw_cell(text, col_idx, y_offset, font, r=0, g=0, b=0):
             paint.setARGB(255, r, g, b)
+            left, right, top, bottom = cell_rect(col_idx, y_offset)
+            cell_w = right - left
+            text_w = font.measureText(text)
+            metrics = font.getMetrics()
+            cell_h = bottom - top
+            x_center = left + (cell_w - text_w) / 2
+            y_center = top + (cell_h - metrics.fAscent + metrics.fDescent) / 2 - metrics.fDescent
             blob = skia.TextBlob(text, font)
-            canvas.drawTextBlob(blob, x + pad + 8, y + 22, paint)
+            canvas.drawTextBlob(blob, int(x_center), int(y_center), paint)
 
         # title
-        draw_text("arielBot 帮助", pad, title_h + pad, title_font, 30, 80, 200)
+        draw_cell("arielBot 帮助", 0, title_h, title_font, 30, 80, 200)
+        y = title_h
+        canvas.drawLine(pad, y + pad, w - pad, y + pad, paint)
 
         # header row
         headers = ("命令", "别名", "权限", "说明")
-        for i, col_x in enumerate(cols[:-1]):
-            draw_text(headers[i], col_x + pad, title_h + pad, header_font)
-        y = title_h + header_h
-        canvas.drawLine(pad, y - row_h + pad, w - pad, y - row_h + pad, paint)
+        y += header_h
+        for i in range(4):
+            draw_cell(headers[i], i, y, header_font)
+        canvas.drawLine(pad, y + pad, w - pad, y + pad, paint)
 
-        # body
+        # body rows
+        y += row_h
         for row in rows:
-            for i, col_x in enumerate(cols[:-1]):
-                draw_text(row[i], col_x + pad, y + pad, body_font)
+            for i in range(4):
+                draw_cell(row[i], i, y, body_font)
             y += row_h
 
         skia_img = skia.Image.fromarray(

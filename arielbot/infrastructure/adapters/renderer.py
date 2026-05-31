@@ -6,6 +6,17 @@ from dynrender_skia.Core import DynRender
 from arielbot.domain.interfaces.renderer import DynRenderer, SubListRenderer
 
 
+def _find_cjk_typeface() -> skia.Typeface:
+    fm = skia.FontMgr()
+    for name in ["Noto Sans CJK SC", "Noto Sans CJK", "Source Han Sans SC",
+                 "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Microsoft YaHei",
+                 "SimHei", "PingFang SC", "Hiragino Sans GB"]:
+        tf = fm.matchFamilyStyle(name, skia.FontStyle().Normal())
+        if tf and tf.getFamilyName():
+            return tf
+    return fm.matchFamilyStyle("", skia.FontStyle().Normal())
+
+
 class SkiaDynRenderer(DynRenderer):
     async def render(self, dynamic: object) -> bytes:
         loop = asyncio.get_running_loop()
@@ -49,11 +60,7 @@ class SkiaSubListRenderer(SubListRenderer):
             rect = skia.Rect.MakeXYWH(0, 0, 1000, y)
             canvas.drawRect(rect, paint)
 
-        first_char = sub_data[0][1][0] if sub_data[0][1] else "订"
-        typeface = skia.FontMgr().matchFamilyStyleCharacter(
-            "Noto Sans CJK SC", skia.FontStyle().Normal(), ["zh", "en"],
-            ord(first_char),
-        )
+        typeface = _find_cjk_typeface()
         paint.setStyle(skia.Paint.Style.kFill_Style)
         font = skia.Font(typeface, 16)
         metrics = font.getMetrics()
