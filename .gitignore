@@ -61,6 +61,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+*.sqlite-wal
+*.sqlite-shm
 
 # Flask stuff:
 instance/
@@ -124,12 +126,25 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Virtual Studio Code
+.vscode/
+.idea/
+
+# Project-specific
+data/
+data.sqlite
+data.sqlite-wal
+data.sqlite-shm
+opencode.json
+start-review-session.ps1
 
 # Spyder project settings
 .spyderproject
