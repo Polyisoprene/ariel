@@ -11,29 +11,27 @@ class BotStatusService:
     async def toggle_push(self, bot_id: int, group_id: int, active: bool) -> Optional[str]:
         status = await self._repo.get(bot_id, group_id)
         if not status:
-            await self._repo.save(bot_id, group_id, int(active), 1)
+            await self._repo.save(bot_id, group_id, active, True)
             return "bot已开启" if active else "bot已关闭"
-        if int(active) == status.push_active:
+        if active == status.push_active:
             if not active:
                 return "bot已经为关闭状态"
             return "bot已经为开启状态"
-        await self._repo.update_push(bot_id, group_id, int(active))
+        await self._repo.update_push(bot_id, group_id, active)
         return "bot关闭成功" if not active else "bot开启成功"
 
     async def is_bot_active(self, bot_id: int, group_id: int) -> bool:
         status = await self._repo.get(bot_id, group_id)
         if not status:
-            await self._repo.save(bot_id, group_id, 1, 1)
+            await self._repo.save(bot_id, group_id, True, True)
             return True
-        return bool(status.push_active and status.bot_active)
+        return status.push_active and status.bot_active
 
     async def on_bot_connect(self, bot_id: int) -> None:
-        await self._repo.update_active(bot_id, 1)
+        await self._repo.update_active(bot_id, True)
 
     async def on_bot_disconnect(self, bot_id: int) -> None:
-        await self._repo.update_active(bot_id, 0)
+        await self._repo.update_active(bot_id, False)
 
     async def shutdown_all(self) -> None:
-        bots = await self._repo.list_all_bots()
-        for bid in bots:
-            await self._repo.update_active(bid, 0)
+        await self._repo.deactivate_all()

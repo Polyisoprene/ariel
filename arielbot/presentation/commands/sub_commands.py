@@ -1,10 +1,13 @@
+from typing import Callable, Awaitable
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
+from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from arielbot.application.subscription_service import SubscriptionService
 
 
-def make_sub_handler(sub_service, matcher):
-    async def handler(event: GroupMessageEvent, args: Message = CommandArg()):
+def make_sub_handler(sub_service: SubscriptionService, matcher: Matcher) -> Callable[[GroupMessageEvent, Message], Awaitable[None]]:
+    async def handler(event: GroupMessageEvent, args: Message = CommandArg()) -> None:
         uid = args.extract_plain_text()
         if not uid or not uid.isdigit():
             await matcher.finish("请携带正确的uid后重试")
@@ -13,8 +16,8 @@ def make_sub_handler(sub_service, matcher):
     return handler
 
 
-def make_unsub_handler(sub_service, matcher):
-    async def handler(event: GroupMessageEvent, args: Message = CommandArg()):
+def make_unsub_handler(sub_service: SubscriptionService, matcher: Matcher) -> Callable[[GroupMessageEvent, Message], Awaitable[None]]:
+    async def handler(event: GroupMessageEvent, args: Message = CommandArg()) -> None:
         uid = args.extract_plain_text()
         if not uid or not uid.isdigit():
             await matcher.finish("请携带正确的uid后重试")
@@ -23,8 +26,8 @@ def make_unsub_handler(sub_service, matcher):
     return handler
 
 
-def make_live_toggle_handler(sub_service, matcher, active: bool):
-    async def handler(event: GroupMessageEvent, args: Message = CommandArg()):
+def make_live_toggle_handler(sub_service: SubscriptionService, matcher: Matcher, active: bool) -> Callable[[GroupMessageEvent, Message], Awaitable[None]]:
+    async def handler(event: GroupMessageEvent, args: Message = CommandArg()) -> None:
         uid = args.extract_plain_text()
         if not uid or not uid.isdigit():
             await matcher.finish("请携带正确的uid后重试")
@@ -35,8 +38,8 @@ def make_live_toggle_handler(sub_service, matcher, active: bool):
     return handler
 
 
-def make_dyn_toggle_handler(sub_service, matcher, active: bool):
-    async def handler(event: GroupMessageEvent, args: Message = CommandArg()):
+def make_dyn_toggle_handler(sub_service: SubscriptionService, matcher: Matcher, active: bool) -> Callable[[GroupMessageEvent, Message], Awaitable[None]]:
+    async def handler(event: GroupMessageEvent, args: Message = CommandArg()) -> None:
         uid = args.extract_plain_text()
         if not uid or not uid.isdigit():
             await matcher.finish("请携带正确的uid后重试")

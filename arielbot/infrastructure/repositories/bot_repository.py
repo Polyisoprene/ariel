@@ -23,25 +23,25 @@ class SqlBotStatusRepository(BotStatusRepository):
             )
 
     async def save(self, bot_id: int, group_id: int,
-                   push_active: int, bot_active: int) -> None:
+                   push_active: bool, bot_active: bool) -> None:
         async with self._db.transaction() as cursor:
             await cursor.execute(
                 "INSERT INTO botStatus (bot, groupId, push_active, bot_active) VALUES (?, ?, ?, ?)",
-                (bot_id, group_id, push_active, bot_active),
+                (bot_id, group_id, int(push_active), int(bot_active)),
             )
 
-    async def update_push(self, bot_id: int, group_id: int, active: int) -> None:
+    async def update_push(self, bot_id: int, group_id: int, active: bool) -> None:
         async with self._db.transaction() as cursor:
             await cursor.execute(
                 "UPDATE botStatus SET push_active=? WHERE bot=? AND groupId=?",
-                (active, bot_id, group_id),
+                (int(active), bot_id, group_id),
             )
 
-    async def update_active(self, bot_id: int, active: int) -> None:
+    async def update_active(self, bot_id: int, active: bool) -> None:
         async with self._db.transaction() as cursor:
             await cursor.execute(
                 "UPDATE botStatus SET bot_active=? WHERE bot=?",
-                (active, bot_id),
+                (int(active), bot_id),
             )
 
     async def list_all_bots(self) -> List[int]:
@@ -49,3 +49,7 @@ class SqlBotStatusRepository(BotStatusRepository):
             await cursor.execute("SELECT DISTINCT bot FROM botStatus")
             rows = await cursor.fetchall()
             return [r[0] for r in rows] if rows else []
+
+    async def deactivate_all(self) -> None:
+        async with self._db.transaction() as cursor:
+            await cursor.execute("UPDATE botStatus SET bot_active=0")

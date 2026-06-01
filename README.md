@@ -14,6 +14,7 @@
 - 每 8 秒检查新动态，每 10 秒检查直播状态
 - 按群开关推送、按订阅开关动态/直播推送
 - 按动态 ID 查询动态卡片或提取原始图片
+- 动态自动归档（7 天后从 Dynamic 表迁移至 DynamicArchive，查询兼容两表）
 
 ## 架构
 
@@ -28,7 +29,7 @@ arielbot/
 │       ├── api.py                # BiliAuthAPI, BiliContentAPI
 │       ├── bot_client.py         # BotClient
 │       ├── event_bus.py          # EventBus
-│       ├── renderer.py           # DynRenderer, SubListRenderer
+│       ├── renderer.py           # DynRenderer, SubListRenderer, HelpRenderer
 │       └── repository.py         # 5 个 Repository 接口
 ├── application/                  # 应用层 (业务逻辑)
 │   ├── auth_service.py           # 扫码登录 + Cookie 管理
@@ -40,12 +41,12 @@ arielbot/
 │       └── handlers.py           # DynPushHandler, LivePushHandler, ...
 ├── infrastructure/               # 基础设施层
 │   ├── container.py              # DI 容器 (所有依赖注入)
-│   ├── database.py               # SQLite + WAL 模式
+│   ├── database.py               # SQLite + WAL 模式 + 索引 + 迁移
 │   ├── event_bus.py              # asyncio.Queue 事件总线
 │   ├── repositories/             # 仓储实现
 │   │   ├── bot_repository.py
 │   │   ├── cookie_repository.py
-│   │   ├── dyn_repository.py
+│   │   ├── dyn_repository.py     # 含 DynamicArchive 归档逻辑
 │   │   ├── sub_repository.py     # SqlSubChannelRepository
 │   │   └── target_repository.py  # SqlSubTargetRepository
 │   └── adapters/                 # 外部适配器
@@ -53,7 +54,7 @@ arielbot/
 │       ├── bili_auth.py          # 登录 + CookieManager
 │       ├── bili_cookie_utils.py  # Cookie 序列化/解析
 │       ├── bot_client.py         # NoneBot 消息发送
-│       └── renderer.py           # Skia 渲染 (线程池)
+│       └── renderer.py           # Skia 渲染 (线程池) + SkiaHelpRenderer
 ├── presentation/                 # 表现层
 │   ├── message_utils.py          # MessageSegment 封装
 │   ├── commands/                 # 命令注册 + 处理器工厂
@@ -61,7 +62,7 @@ arielbot/
 │   │   ├── auth_commands.py
 │   │   ├── sub_commands.py
 │   │   └── query_commands.py
-│   ├── scheduler/__init__.py     # APScheduler 定时任务
+│   ├── scheduler/__init__.py     # APScheduler 定时任务 (含动态归档)
 │   └── middleware/__init__.py    # 权限规则 + 生命周期钩子
 └── plugins/Core/__init__.py      # 组合根 (插件入口)
 ```

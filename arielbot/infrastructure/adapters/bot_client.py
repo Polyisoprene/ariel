@@ -1,3 +1,4 @@
+from typing import Optional
 from nonebot import get_bot, logger
 from nonebot.adapters.onebot.v11 import Bot, MessageSegment
 from arielbot.domain.interfaces.bot_client import BotClient as BotClientABC
@@ -5,8 +6,8 @@ from arielbot.domain.interfaces.bot_client import BotClient as BotClientABC
 
 class BotClient(BotClientABC):
     async def send_group_msg(self, group_id: int, bot_id: int,
-                              text: str = "", image: bytes = None,
-                              cover: str = None) -> None:
+                              text: str = "", image: Optional[bytes] = None,
+                              cover: Optional[str] = None) -> None:
         try:
             bot: Bot = get_bot(str(bot_id))
         except KeyError:

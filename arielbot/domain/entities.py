@@ -5,7 +5,6 @@ from dataclasses import dataclass
 class SubTarget:
     uid: str
     nickname: str
-    live_status: int
 
 
 @dataclass

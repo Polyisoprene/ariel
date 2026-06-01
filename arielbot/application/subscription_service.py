@@ -15,7 +15,7 @@ class SubscriptionService:
         if target:
             ch = await self._channel_repo.get(uid, group_id, bot_id)
             if ch:
-                if ch.live_active == 0 or ch.dyn_active == 0:
+                if not ch.live_active or not ch.dyn_active:
                     await self._channel_repo.update(1, 1, uid, group_id, bot_id)
                     return f"成功添加订阅 --> {target.nickname}({uid})"
                 else:
@@ -34,7 +34,7 @@ class SubscriptionService:
                 follow_result = await self._api.follow_user(uid, 1)
                 if not follow_result:
                     return "添加订阅失败"
-            await self._target_repo.save(uid, card["name"], 0)
+            await self._target_repo.save(uid, card["name"])
             await self._channel_repo.save(uid, group_id, bot_id)
             return f"成功添加订阅 --> {card['name']}({uid})"
 
@@ -53,7 +53,7 @@ class SubscriptionService:
         if not ch:
             return f"本群没有订阅 --> {uid}"
         await self._channel_repo.update(
-            int(active), ch.dyn_active, uid, group_id, bot_id
+            active, ch.dyn_active, uid, group_id, bot_id
         )
         return "开启直播推送成功" if active else "关闭直播推送成功"
 
@@ -62,6 +62,6 @@ class SubscriptionService:
         if not ch:
             return f"本群没有订阅 --> {uid}"
         await self._channel_repo.update(
-            ch.live_active, int(active), uid, group_id, bot_id
+            ch.live_active, active, uid, group_id, bot_id
         )
         return "开启动态推送成功" if active else "关闭动态推送成功"

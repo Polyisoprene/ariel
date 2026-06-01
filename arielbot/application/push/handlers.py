@@ -1,13 +1,14 @@
 from arielbot.domain.events import DynamicDetected, LiveStatusChanged
 from arielbot.domain.events import BotConnected, BotDisconnected, BotShutdown
 from arielbot.domain.interfaces.bot_client import BotClient
+from arielbot.application.bot_status_service import BotStatusService
 
 
 class DynPushHandler:
     def __init__(self, bot_client: BotClient):
         self._client = bot_client
 
-    async def handle(self, event: DynamicDetected):
+    async def handle(self, event: DynamicDetected) -> None:
         for gid, bid in event.targets:
             message = (
                 f"{event.uname}发布了新动态:\n\n"
@@ -22,7 +23,7 @@ class LivePushHandler:
     def __init__(self, bot_client: BotClient):
         self._client = bot_client
 
-    async def handle(self, event: LiveStatusChanged):
+    async def handle(self, event: LiveStatusChanged) -> None:
         if not event.is_live:
             return
         for gid, bid in event.targets:
@@ -37,14 +38,14 @@ class LivePushHandler:
 
 
 class BotLifecycleHandler:
-    def __init__(self, bot_status_service):
+    def __init__(self, bot_status_service: BotStatusService):
         self._service = bot_status_service
 
-    async def on_connect(self, event: BotConnected):
+    async def on_connect(self, event: BotConnected) -> None:
         await self._service.on_bot_connect(event.bot_id)
 
-    async def on_disconnect(self, event: BotDisconnected):
+    async def on_disconnect(self, event: BotDisconnected) -> None:
         await self._service.on_bot_disconnect(event.bot_id)
 
-    async def on_shutdown(self, event: BotShutdown):
+    async def on_shutdown(self, event: BotShutdown) -> None:
         await self._service.shutdown_all()

@@ -1,7 +1,10 @@
+from typing import Any, Callable, Dict, Optional, Set
 from nonebot import on_command
 from nonebot.adapters import Bot, Message
+from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
-from nonebot.permission import SUPERUSER
+from nonebot.permission import SUPERUSER, Permission
+from nonebot.rule import Rule
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 from arielbot.presentation.middleware import make_bot_is_active_rule
@@ -22,18 +25,20 @@ from arielbot.presentation.commands.query_commands import (
 
 
 class CommandRegistry:
-    _matchers = {}
+    _matchers: Dict[str, Matcher] = {}
 
     @classmethod
     def register(cls, name: str, *,
-                 permission=None, aliases=None, rule=None):
+                 permission: Optional[Permission] = None,
+                 aliases: Optional[Set[str]] = None,
+                 rule: Optional[Rule] = None) -> Matcher:
         matcher = on_command(name, permission=permission,
                              aliases=aliases, rule=rule)
         cls._matchers[name] = matcher
         return matcher
 
     @classmethod
-    def register_all(cls, container) -> None:
+    def register_all(cls, container: Any) -> None:
         bot_is_active = make_bot_is_active_rule(container.bot_status_service)
 
         login_matcher = cls.register(

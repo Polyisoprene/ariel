@@ -32,7 +32,7 @@ class SimpleEventBus(EventBus):
             except asyncio.CancelledError:
                 pass
 
-    async def _dispatch_loop(self):
+    async def _dispatch_loop(self) -> None:
         while True:
             event = await self._queue.get()
             for event_type, handlers in self._handlers.items():

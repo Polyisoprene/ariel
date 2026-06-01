@@ -30,7 +30,7 @@ class BiliContentAPI(ABC):
         ...
 
     @abstractmethod
-    async def get_user_info(self, uid: str):
+    async def get_user_info(self, uid: str) -> Optional[dict | str]:
         ...
 
     @abstractmethod

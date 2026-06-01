@@ -9,11 +9,11 @@ class SubTargetRepository(ABC):
         ...
 
     @abstractmethod
-    async def save(self, uid: str, nickname: str, live_status: int) -> None:
+    async def save(self, uid: str, nickname: str) -> None:
         ...
 
     @abstractmethod
-    async def update(self, nickname: str, live_status: int, uid: str) -> None:
+    async def update(self, nickname: str, uid: str) -> None:
         ...
 
 
@@ -27,7 +27,7 @@ class SubChannelRepository(ABC):
         ...
 
     @abstractmethod
-    async def update(self, live_active: int, dyn_active: int,
+    async def update(self, live_active: bool, dyn_active: bool,
                      uid: str, group_id: int, bot_id: int) -> None:
         ...
 
@@ -44,7 +44,7 @@ class SubChannelRepository(ABC):
         ...
 
     @abstractmethod
-    async def find_live_check_uids(self) -> List[tuple]:
+    async def find_all_subscribed_uids(self) -> List[str]:
         ...
 
     @abstractmethod
@@ -59,25 +59,29 @@ class BotStatusRepository(ABC):
 
     @abstractmethod
     async def save(self, bot_id: int, group_id: int,
-                   push_active: int, bot_active: int) -> None:
+                   push_active: bool, bot_active: bool) -> None:
         ...
 
     @abstractmethod
-    async def update_push(self, bot_id: int, group_id: int, active: int) -> None:
+    async def update_push(self, bot_id: int, group_id: int, active: bool) -> None:
         ...
 
     @abstractmethod
-    async def update_active(self, bot_id: int, active: int) -> None:
+    async def update_active(self, bot_id: int, active: bool) -> None:
         ...
 
     @abstractmethod
     async def list_all_bots(self) -> List[int]:
         ...
 
+    @abstractmethod
+    async def deactivate_all(self) -> None:
+        ...
+
 
 class CookieRepository(ABC):
     @abstractmethod
-    async def get(self) -> Optional[tuple]:
+    async def get(self) -> Optional[Tuple[bytes, str]]:
         ...
 
     @abstractmethod
@@ -96,7 +100,7 @@ class CookieRepository(ABC):
 
 class DynCacheRepository(ABC):
     @abstractmethod
-    async def exists(self, dyn_id: str) -> Optional[bytes]:
+    async def exists(self, dyn_id: str) -> bool:
         ...
 
     @abstractmethod
@@ -104,5 +108,9 @@ class DynCacheRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_content(self, dyn_id: str) -> Optional[bytes]:
+    async def find(self, dyn_id: str) -> Optional[bytes]:
+        ...
+
+    @abstractmethod
+    async def archive_old_dynamics(self, days: int = 7) -> None:
         ...

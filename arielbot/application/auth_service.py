@@ -1,27 +1,36 @@
 import asyncio
 import qrcode
 from io import BytesIO
+from typing import Callable, Optional
+from nonebot.adapters import Bot
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 from arielbot.domain.interfaces.api import BiliAuthAPI
 from arielbot.domain.interfaces.repository import CookieRepository
+from arielbot.infrastructure.adapters.bili_auth import CookieManager
+from arielbot.domain.interfaces.bot_client import BotClient
 
-_POLL_INTERVAL = 3
-_LOGIN_TIMEOUT = 300
+_POLL_INTERVAL: int = 3
+_LOGIN_TIMEOUT: int = 300
 
 
 class AuthService:
     def __init__(self, auth_api: BiliAuthAPI, cookie_repo: CookieRepository,
-                 bot_client, parse_cookie_fn, serialize_cookie_fn,
-                 cookie_manager=None, build_text=None, build_image=None):
-        self._auth_api = auth_api
-        self._cookie_repo = cookie_repo
-        self._bot_client = bot_client
-        self._parse_cookie = parse_cookie_fn
-        self._serialize_cookie = serialize_cookie_fn
-        self._cookie_manager = cookie_manager
-        self._build_text = build_text or (lambda s: s)
-        self._build_image = build_image or (lambda b: b)
+                 bot_client: BotClient,
+                 parse_cookie_fn: Callable[[dict], Optional[dict]],
+                 serialize_cookie_fn: Callable[[dict], bytes],
+                 cookie_manager: Optional[CookieManager] = None,
+                 build_text: Callable[[str], MessageSegment] = lambda s: MessageSegment.text(s),
+                 build_image: Callable[[bytes], MessageSegment] = lambda b: MessageSegment.image(b)) -> None:
+        self._auth_api: BiliAuthAPI = auth_api
+        self._cookie_repo: CookieRepository = cookie_repo
+        self._bot_client: BotClient = bot_client
+        self._parse_cookie: Callable[[dict], Optional[dict]] = parse_cookie_fn
+        self._serialize_cookie: Callable[[dict], bytes] = serialize_cookie_fn
+        self._cookie_manager: Optional[CookieManager] = cookie_manager
+        self._build_text: Callable[[str], MessageSegment] = build_text
+        self._build_image: Callable[[bytes], MessageSegment] = build_image
 
-    async def login(self, bot, event):
+    async def login(self, bot: Bot, event: GroupMessageEvent) -> None:
         scan_url = await self._auth_api.get_qrcode()
         if scan_url is None:
             await bot.send(event=event, message=self._build_text("获取扫码链接失败"))
@@ -43,7 +52,7 @@ class AuthService:
 
         await self._save_login_cookie(bot, event, scan_result)
 
-    async def _send_qrcode(self, bot, event, scan_url: str):
+    async def _send_qrcode(self, bot: Bot, event: GroupMessageEvent, scan_url: str) -> None:
         qrcode_buffer = BytesIO()
         qr = qrcode.QRCode()
         qr.add_data(scan_url)
@@ -51,7 +60,7 @@ class AuthService:
         img.save(qrcode_buffer)
         await bot.send(event, message=self._build_image(qrcode_buffer.getvalue()))
 
-    async def _poll_scan_result(self):
+    async def _poll_scan_result(self) -> Optional[dict]:
         while True:
             scan_result = await self._auth_api.poll_scan()
             if scan_result is None or scan_result.get("code") == 86038:
@@ -60,7 +69,7 @@ class AuthService:
                 return scan_result
             await asyncio.sleep(_POLL_INTERVAL)
 
-    async def _save_login_cookie(self, bot, event, scan_result: dict):
+    async def _save_login_cookie(self, bot: Bot, event: GroupMessageEvent, scan_result: dict) -> None:
         cookies = self._parse_cookie(scan_result)
         refresh_token = scan_result.get("refresh_token")
         if cookies is None or refresh_token is None:

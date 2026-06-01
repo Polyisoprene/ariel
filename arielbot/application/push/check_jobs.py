@@ -14,16 +14,18 @@ from arielbot.domain.interfaces.event_bus import EventBus
 class DynCheckJob:
     def __init__(self, content_api: BiliContentAPI,
                  dyn_cache_repo: DynCacheRepository,
+                 sub_target_repo: SubTargetRepository,
                  sub_channel_repo: SubChannelRepository,
                  dyn_renderer: DynRenderer,
                  event_bus: EventBus):
         self._api = content_api
         self._dyn_cache_repo = dyn_cache_repo
+        self._target_repo = sub_target_repo
         self._sub_channel_repo = sub_channel_repo
         self._dyn_renderer = dyn_renderer
         self._event_bus = event_bus
 
-    async def run(self):
+    async def run(self) -> None:
         follow_dynamic_list = await self._api.get_follow_dynamics()
         if follow_dynamic_list is None:
             return
@@ -42,10 +44,16 @@ class DynCheckJob:
                 await self._dyn_cache_repo.save(
                     dynamic.message_id, dynamic.header.name, pickle.dumps(dynamic)
                 )
+                await self._target_repo.update(
+                    dynamic.header.name, dynamic.header.mid
+                )
                 continue
             rendered = await self._dyn_renderer.render(dynamic)
             await self._dyn_cache_repo.save(
                 dynamic.message_id, dynamic.header.name, pickle.dumps(dynamic)
+            )
+            await self._target_repo.update(
+                dynamic.header.name, dynamic.header.mid
             )
             await self._event_bus.publish(DynamicDetected(
                 dynamic=dynamic,
@@ -58,32 +66,28 @@ class DynCheckJob:
 
 class LiveCheckJob:
     def __init__(self, content_api: BiliContentAPI,
-                 sub_target_repo: SubTargetRepository,
                  sub_channel_repo: SubChannelRepository,
                  event_bus: EventBus):
         self._api = content_api
-        self._target_repo = sub_target_repo
         self._channel_repo = sub_channel_repo
         self._event_bus = event_bus
+        self._live_cache: dict[str, int] = {}
 
-    async def run(self):
-        all_check_uid_list = await self._channel_repo.find_live_check_uids()
-        if not all_check_uid_list:
+    async def run(self) -> None:
+        uid_list = await self._channel_repo.find_all_subscribed_uids()
+        if not uid_list:
             return
-        all_live_status = {row[0]: row[1] for row in all_check_uid_list}
-        uid_list = [row[0] for row in all_check_uid_list]
         check_result = await self._api.get_room_info_by_uids(uid_list)
         if check_result is None:
             return
         for k, v in check_result.items():
-            if v["live_status"] != 1:
-                v["live_status"] = 0
-            if all_live_status.get(k) == v["live_status"]:
+            current = 1 if v["live_status"] == 1 else 0
+            prev = self._live_cache.get(k, current)
+            self._live_cache[k] = current
+            if prev == current:
                 continue
-            if all_live_status.get(k) == 1:
-                await self._target_repo.update(v["uname"], 0, str(v["uid"]))
+            if prev == 1:
                 continue
-            await self._target_repo.update(v["uname"], 1, str(v["uid"]))
             targets = await self._channel_repo.find_push_targets_for_live(str(v["uid"]))
             if not targets:
                 continue
@@ -93,6 +97,6 @@ class LiveCheckJob:
                 room_id=v["room_id"],
                 title=v["title"],
                 cover_url=v["cover_from_user"],
-                is_live=(v["live_status"] == 1),
+                is_live=(current == 1),
                 targets=targets,
             ))

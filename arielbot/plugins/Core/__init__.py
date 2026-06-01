@@ -13,7 +13,7 @@ driver = get_driver()
 container = Container()
 register_lifecycle_hooks(driver, container.event_bus)
 CommandRegistry.register_all(container)
-register_scheduled_jobs(scheduler, container.dyn_check_job, container.live_check_job)
+register_scheduled_jobs(scheduler, container.dyn_check_job, container.live_check_job, container.dyn_cache_repo)
 
 
 @driver.on_startup

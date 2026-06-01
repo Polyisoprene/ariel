@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from arielbot.domain.interfaces.repository import CookieRepository
 from arielbot.infrastructure.database import DatabaseManager
 
@@ -7,7 +7,7 @@ class SqlCookieRepository(CookieRepository):
     def __init__(self, db: DatabaseManager):
         self._db = db
 
-    async def get(self) -> Optional[tuple]:
+    async def get(self) -> Optional[Tuple[bytes, str]]:
         async with self._db.transaction() as cursor:
             await cursor.execute("SELECT cookie, refresh_token FROM Cookie ORDER BY id DESC LIMIT 1")
             return await cursor.fetchone()

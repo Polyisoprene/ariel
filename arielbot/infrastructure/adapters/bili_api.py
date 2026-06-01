@@ -32,11 +32,11 @@ class BiliContentAdapter(BiliContentAPI):
     def __init__(self, cookie_manager: CookieManager):
         self._cookie_mgr = cookie_manager
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
-        self._img_key = None
-        self._sub_key = None
-        self._wbi_cached_at = 0.0
+        self._img_key: Optional[str] = None
+        self._sub_key: Optional[str] = None
+        self._wbi_cached_at: float = 0.0
 
-    async def close(self):
+    async def close(self) -> None:
         await self._client.aclose()
 
     async def _ensure_cookie(self) -> bool:
@@ -44,10 +44,10 @@ class BiliContentAdapter(BiliContentAPI):
         return cookie is not None
 
     @property
-    def _cookie(self):
+    def _cookie(self) -> Optional[dict]:
         return self._cookie_mgr.cookie
 
-    async def _get_wbi_keys(self):
+    async def _get_wbi_keys(self) -> None:
         if self._img_key and self._sub_key and time.time() - self._wbi_cached_at < _WBI_TTL:
             return
         try:
@@ -64,10 +64,12 @@ class BiliContentAdapter(BiliContentAPI):
         except Exception as e:
             logger.error(e)
 
-    def _get_mixin_key(self, orig: str):
+    def _get_mixin_key(self, orig: str) -> str:
         return reduce(lambda s, i: s + orig[i], _mixinKeyEncTab, "")[:32]
 
-    async def _enc_wbi(self, params: dict):
+    async def _enc_wbi(self, params: dict) -> dict:
+        if not self._img_key or not self._sub_key:
+            raise RuntimeError("WBI keys not initialized")
         mixin_key = self._get_mixin_key(self._img_key + self._sub_key)
         curr_time = round(time.time())
         params["wts"] = curr_time
@@ -161,7 +163,7 @@ class BiliContentAdapter(BiliContentAPI):
             logger.error(e)
             return None
 
-    async def get_user_info(self, uid: str):
+    async def get_user_info(self, uid: str) -> Optional[dict | str]:
         if not await self._ensure_cookie():
             return "未登录"
         headers = {**_BASE_HEADERS, "Host": "api.bilibili.com", "referer": "https://t.bilibili.com/"}

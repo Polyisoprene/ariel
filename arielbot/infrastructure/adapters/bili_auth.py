@@ -11,6 +11,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from http.cookies import SimpleCookie
 from datetime import datetime, timezone
 from arielbot.domain.interfaces.api import BiliAuthAPI
+from arielbot.domain.interfaces.repository import CookieRepository
 
 _RSA_KEY = RSA.importKey(
     "-----BEGIN PUBLIC KEY-----\n"
@@ -29,12 +30,12 @@ _REFRESH_CSRF_PATTERN = re.compile(
 
 
 class BiliAuthAdapter(BiliAuthAPI):
-    def __init__(self):
-        self.qrcode_key = None
+    def __init__(self) -> None:
+        self.qrcode_key: Optional[str] = None
         self.headers = _HEADERS.copy()
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
 
-    async def close(self):
+    async def close(self) -> None:
         await self._client.aclose()
 
     async def get_qrcode(self) -> Optional[str]:
@@ -62,22 +63,22 @@ class BiliAuthAdapter(BiliAuthAPI):
 
 
 class CookieManager:
-    def __init__(self, cookie_repo):
-        self._cookie_repo = cookie_repo
-        self._cookie = None
-        self._refresh_token = None
+    def __init__(self, cookie_repo: CookieRepository) -> None:
+        self._cookie_repo: CookieRepository = cookie_repo
+        self._cookie: Optional[dict] = None
+        self._refresh_token: Optional[str] = None
         self.headers = _HEADERS.copy()
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
 
-    async def close(self):
+    async def close(self) -> None:
         await self._client.aclose()
 
     @property
-    def cookie(self):
+    def cookie(self) -> Optional[dict]:
         return self._cookie
 
     @property
-    def refresh_token(self):
+    def refresh_token(self) -> Optional[str]:
         return self._refresh_token
 
     async def ensure_cookie(self) -> Optional[dict]:
@@ -85,7 +86,7 @@ class CookieManager:
             await self.load_cookie()
         return self._cookie
 
-    async def load_cookie(self):
+    async def load_cookie(self) -> None:
         result = await self._cookie_repo.get()
         if result is None:
             logger.info("未登录")
@@ -94,7 +95,7 @@ class CookieManager:
         self._cookie = pickle.loads(result[0])
         await self._check_expire()
 
-    async def _check_expire(self):
+    async def _check_expire(self) -> None:
         if self._cookie is None:
             return
         cookie_expire = self._cookie.get("Expires")
@@ -106,7 +107,7 @@ class CookieManager:
             return
         await self._refresh_cookie()
 
-    async def _refresh_cookie(self):
+    async def _refresh_cookie(self) -> None:
         correspond_path = await self._get_correspond_path()
         if correspond_path is None:
             return
@@ -123,7 +124,7 @@ class CookieManager:
         )
         self._refresh_token = new_token
 
-    async def _get_correspond_path(self):
+    async def _get_correspond_path(self) -> Optional[str]:
         params = {"csrf": self._cookie.get("bili_jct", "")}
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/info"
         try:
@@ -137,7 +138,7 @@ class CookieManager:
             logger.error(e)
             return None
 
-    async def _get_refresh_csrf(self, correspond_path):
+    async def _get_refresh_csrf(self, correspond_path: str) -> Optional[str]:
         url = f"https://www.bilibili.com/correspond/1/{correspond_path}"
         try:
             response = await self._client.get(url, headers=self.headers, cookies=self._cookie)
@@ -150,7 +151,7 @@ class CookieManager:
             logger.error(e)
             return None
 
-    async def _get_new_cookie(self, refresh_csrf):
+    async def _get_new_cookie(self, refresh_csrf: str) -> Optional[tuple]:
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/refresh"
         data = {
             "csrf": self._cookie.get("bili_jct", ""),
