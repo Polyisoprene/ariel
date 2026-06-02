@@ -91,8 +91,10 @@ class DatabaseManager:
             columns = [row[1] for row in await cursor.fetchall()]
             if "created_at" not in columns:
                 await cursor.execute(
-                    "ALTER TABLE Dynamic ADD COLUMN created_at "
-                    "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    "ALTER TABLE Dynamic ADD COLUMN created_at TIMESTAMP"
+                )
+                await cursor.execute(
+                    "UPDATE Dynamic SET created_at = datetime('now')"
                 )
                 logger.info("Migration: added created_at to Dynamic table")
         except Exception as e:
