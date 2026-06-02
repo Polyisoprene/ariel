@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 
 class DynRenderer(ABC):
     @abstractmethod
-    async def render(self, dynamic: object) -> bytes:
+    async def render(self, dynamic: Any) -> bytes:
         ...
 
 

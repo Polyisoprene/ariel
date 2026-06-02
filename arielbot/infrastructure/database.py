@@ -50,7 +50,7 @@ class DatabaseManager:
                 uid TEXT NOT NULL UNIQUE,
                 live_status INTEGER NOT NULL DEFAULT 1 CHECK(live_status IN (0, 1))
             );
-            CREATE TABLE IF NOT EXISTS subChennal (
+            CREATE TABLE IF NOT EXISTS subChannel (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 uid TEXT NOT NULL,
                 groupId INTEGER NOT NULL,
@@ -102,34 +102,44 @@ class DatabaseManager:
 
         try:
             await cursor.execute(
-                "SELECT 1 FROM subChennal "
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='subChennal'"
+            )
+            if await cursor.fetchone():
+                await cursor.execute("ALTER TABLE subChennal RENAME TO subChannel")
+                logger.info("Migration: renamed subChennal → subChannel")
+        except Exception as e:
+            logger.warning(f"subChennal rename skipped: {e}")
+
+        try:
+            await cursor.execute(
+                "SELECT 1 FROM subChannel "
                 "GROUP BY uid, groupId, bot HAVING COUNT(*) > 1 LIMIT 1"
             )
             has_dupes = await cursor.fetchone()
             if has_dupes:
                 await cursor.execute("""
-                    DELETE FROM subChennal WHERE id NOT IN (
-                        SELECT MAX(id) FROM subChennal GROUP BY uid, groupId, bot
+                    DELETE FROM subChannel WHERE id NOT IN (
+                        SELECT MAX(id) FROM subChannel GROUP BY uid, groupId, bot
                     )
                 """)
                 logger.info(
-                    f"Migration: removed {cursor.rowcount} duplicate subChennal rows"
+                    f"Migration: removed {cursor.rowcount} duplicate subChannel rows"
                 )
         except Exception as e:
-            logger.warning(f"subChennal dedup skipped: {e}")
+            logger.warning(f"subChannel dedup skipped: {e}")
 
     async def _create_indexes(self, cursor: aiosqlite.Cursor) -> None:
         await cursor.executescript("""
-            CREATE INDEX IF NOT EXISTS idx_subchennal_uid ON subChennal(uid);
-            CREATE INDEX IF NOT EXISTS idx_subchennal_group_bot
-                ON subChennal(groupId, bot);
+            CREATE INDEX IF NOT EXISTS idx_subchannel_uid ON subChannel(uid);
+            CREATE INDEX IF NOT EXISTS idx_subchannel_group_bot
+                ON subChannel(groupId, bot);
             CREATE INDEX IF NOT EXISTS idx_botstatus_group_bot
                 ON botStatus(groupId, bot);
         """)
         try:
             await cursor.executescript("""
-                CREATE UNIQUE INDEX IF NOT EXISTS uidx_subchennal_uid_group_bot
-                    ON subChennal(uid, groupId, bot);
+                CREATE UNIQUE INDEX IF NOT EXISTS uidx_subchannel_uid_group_bot
+                    ON subChannel(uid, groupId, bot);
             """)
         except Exception as e:
-            logger.warning(f"subChennal unique index skipped: {e}")
+            logger.warning(f"subChannel unique index skipped: {e}")

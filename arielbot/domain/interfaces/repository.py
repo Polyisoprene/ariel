@@ -48,7 +48,7 @@ class SubChannelRepository(ABC):
         ...
 
     @abstractmethod
-    async def list_by_group(self, bot_id: int, group_id: int) -> List[tuple]:
+    async def list_by_group(self, bot_id: int, group_id: int) -> List[Tuple[str, str, bool, bool]]:
         ...
 
 

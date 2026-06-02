@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 
 @dataclass
 class DynamicDetected:
-    dynamic: object
+    dynamic: Any
     dyn_id: str
     uname: str
     targets: List[Tuple[int, int]]

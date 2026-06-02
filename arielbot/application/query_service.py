@@ -57,12 +57,17 @@ class QueryService:
 
     async def get_help_image(self) -> bytes:
         loop = asyncio.get_running_loop()
-        if os.path.exists(_HELP_CACHE_PATH):
+        exists = await loop.run_in_executor(None, os.path.exists, _HELP_CACHE_PATH)
+        if exists:
             return await loop.run_in_executor(None, _read_help_cache)
-        os.makedirs(os.path.dirname(_HELP_CACHE_PATH), exist_ok=True)
+        await loop.run_in_executor(None, _ensure_help_dir)
         img_bytes = await self._help_renderer.render()
         await loop.run_in_executor(None, _write_help_cache, img_bytes)
         return img_bytes
+
+
+def _ensure_help_dir() -> None:
+    os.makedirs(os.path.dirname(_HELP_CACHE_PATH), exist_ok=True)
 
 
 def _read_help_cache() -> bytes:

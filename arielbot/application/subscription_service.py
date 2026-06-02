@@ -30,7 +30,7 @@ class SubscriptionService:
             card = uid_info.get("card")
             if not card or "name" not in card:
                 return "未找到相关UP信息"
-            if uid_info.get("following") != True:
+            if uid_info.get("following") is not True:
                 follow_result = await self._api.follow_user(uid, 1)
                 if not follow_result:
                     return "添加订阅失败"

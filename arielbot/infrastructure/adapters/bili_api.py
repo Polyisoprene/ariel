@@ -16,7 +16,7 @@ _mixinKeyEncTab = [
     36, 20, 34, 44, 52
 ]
 _sign_headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
     "Referer": "https://www.bilibili.com/"
 }
 
@@ -62,7 +62,7 @@ class BiliContentAdapter(BiliContentAPI):
             self._sub_key = sub_url.rsplit("/", 1)[1].split(".")[0]
             self._wbi_cached_at = time.time()
         except Exception as e:
-            logger.error(e)
+            logger.warning(f"获取 WBI keys 失败，将在下次请求时重试: {e}")
 
     def _get_mixin_key(self, orig: str) -> str:
         return reduce(lambda s, i: s + orig[i], _mixinKeyEncTab, "")[:32]
@@ -133,22 +133,6 @@ class BiliContentAdapter(BiliContentAPI):
             )
             response.raise_for_status()
             return await formate_message("web", response.json()["data"]["item"])
-        except Exception as e:
-            logger.error(e)
-            return None
-
-    async def get_live_users(self) -> Optional[dict]:
-        if not await self._ensure_cookie():
-            return None
-        headers = {**_BASE_HEADERS, "referer": "https://t.bilibili.com/?spm_id_from=333.1007.0.0"}
-        params = {"up_list_more": 1, "web_location": 333.1365}
-        try:
-            response = await self._client.get(
-                "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal",
-                headers=headers, cookies=self._cookie, params=params,
-            )
-            response.raise_for_status()
-            return response.json()["data"]["live_users"]
         except Exception as e:
             logger.error(e)
             return None

@@ -16,7 +16,3 @@ def parse_login_cookie(scan_result: dict) -> Optional[dict]:
 
 def serialize_cookie(cookie: dict) -> bytes:
     return pickle.dumps(cookie)
-
-
-def deserialize_cookie(data: bytes) -> dict:
-    return pickle.loads(data)

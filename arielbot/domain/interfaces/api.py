@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 class BiliAuthAPI(ABC):
@@ -18,11 +18,7 @@ class BiliContentAPI(ABC):
         ...
 
     @abstractmethod
-    async def get_dynamic_by_id(self, dyn_id: str) -> Optional[object]:
-        ...
-
-    @abstractmethod
-    async def get_live_users(self) -> Optional[dict]:
+    async def get_dynamic_by_id(self, dyn_id: str) -> Optional[Any]:
         ...
 
     @abstractmethod
