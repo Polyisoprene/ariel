@@ -6,6 +6,8 @@
 ![Tests](https://img.shields.io/badge/tests-87/87-brightgreen)
 ![Score](https://img.shields.io/badge/code%20quality-92/100-success)
 
+> **学习 Python？** 这个项目是很好的学习材料。阅读 [项目学习笔记](docs/学习笔记.md) 了解 Clean Architecture、异步编程、设计模式等核心概念。
+
 ## 功能
 
 - 订阅 B站 UP 主的动态和直播
