@@ -92,7 +92,7 @@ class DatabaseManager:
             if "created_at" not in columns:
                 await cursor.execute(
                     "ALTER TABLE Dynamic ADD COLUMN created_at "
-                    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                    "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
                 )
                 logger.info("Migration: added created_at to Dynamic table")
         except Exception as e:
