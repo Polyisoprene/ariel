@@ -18,8 +18,8 @@ class SqlDynCacheRepository(DynCacheRepository):
     async def save(self, dyn_id: str, uname: str, content: bytes) -> None:
         async with self._db.transaction() as cursor:
             await cursor.execute(
-                "INSERT OR IGNORE INTO Dynamic (dyn_id, uname, dyn_content) "
-                "VALUES (?, ?, ?)",
+                "INSERT OR IGNORE INTO Dynamic (dyn_id, uname, dyn_content, created_at) "
+                "VALUES (?, ?, ?, datetime('now', '+8 hours'))",
                 (dyn_id, uname, content),
             )
 
@@ -44,10 +44,10 @@ class SqlDynCacheRepository(DynCacheRepository):
             await cursor.execute(
                 "INSERT OR IGNORE INTO DynamicArchive (dyn_id, uname, dyn_content) "
                 "SELECT dyn_id, uname, dyn_content FROM Dynamic "
-                "WHERE created_at < datetime('now', ?)",
+                "WHERE created_at < datetime('now', '+8 hours', ?)",
                 (f"-{days} days",),
             )
             await cursor.execute(
-                "DELETE FROM Dynamic WHERE created_at < datetime('now', ?)",
+                "DELETE FROM Dynamic WHERE created_at < datetime('now', '+8 hours', ?)",
                 (f"-{days} days",),
             )

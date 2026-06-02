@@ -94,7 +94,7 @@ class DatabaseManager:
                     "ALTER TABLE Dynamic ADD COLUMN created_at TIMESTAMP"
                 )
                 await cursor.execute(
-                    "UPDATE Dynamic SET created_at = datetime('now')"
+                    "UPDATE Dynamic SET created_at = datetime('now', '+8 hours')"
                 )
                 logger.info("Migration: added created_at to Dynamic table")
         except Exception as e:
